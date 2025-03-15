@@ -4,6 +4,7 @@
 /* CSS Variables */
 :root {
   --font-sans: 'Open Sans', Arial, Helvetica, sans-serif;
+  --body-background-color: #252728;
 
   /* Site Header */
   --site-header-height: clamp(3.5rem, 9vh, 5rem);
@@ -12,15 +13,18 @@
   --site-header-gap-user-action-elements: clamp(0.9rem, 1.5vw, 1.5rem);
   --site-header-gap-header-sides: clamp(0.25rem, 1.5vw, 2rem);
     /* Site Header Logo */
-  --site-header-logo-font-size: clamp(1.75rem, 3.3vh, 2rem);
-  --site-header-logo-dosq-part-font-color: #B51811;
-  --site-header-logo-fm-part-font-color: #FFFFFF;
+    --site-header-logo-font-size: clamp(1.75rem, 3.3vh, 2rem);
+    --site-header-logo-dosq-part-font-color: #B51811;
+    --site-header-logo-fm-part-font-color: #FFFFFF;
     /* Site Header Nav */
-  --site-header-nav-font-size: clamp(1.25rem, 2.5vh, 2rem);
+    --site-header-nav-font-size: clamp(1.25rem, 2.5vh, 2rem);
     /* Site Header Profile */
-  --site-header-profile-icon-size: clamp(2.5rem, 6vh, 2.5rem);
+    --site-header-profile-icon-size: clamp(2.5rem, 6vh, 2.5rem);
 
-  --body-background-color: #252728;
+  /* Site Footer */
+  --site-footer-height: clamp(3.5rem, 9vh, 5rem);
+  --site-footer-background-color: #303030;
+  --site-footer-font-color: #ABA8A7;
 }
 
 /* Global Styles */
@@ -32,6 +36,7 @@ body {
   box-sizing: border-box;
 }
 
+/* Header Styles */
 .site-header {
   display: flex;
   width: 100%;
@@ -42,7 +47,7 @@ body {
   padding: 0 var(--site-header-gap-header-sides);
 }
 
-/* Header Styles */
+/* Header Content Styles */
 .site-header-content {
   width: 100%;
   display: flex;
@@ -90,6 +95,23 @@ body {
   width: var(--site-header-profile-icon-size);
   height: var(--site-header-profile-icon-size);
   border-radius: 50%;
+}
+
+/* Footer Styles */
+.site-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: var(--site-footer-height);
+  background-color: var(--site-footer-background-color);
+  color: var(--site-footer-font-color);
+}
+
+.site-footer-content {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 /* Media Queries for Mobile Devices */
