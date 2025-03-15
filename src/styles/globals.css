@@ -25,6 +25,8 @@
   --site-footer-height: clamp(3.5rem, 9vh, 5rem);
   --site-footer-background-color: #303030;
   --site-footer-font-color: #ABA8A7;
+  --site-footer-font-size: clamp(0.8rem, 2vh, 1.5rem);
+  --site-footer-items-gap: clamp(0.25rem, 1.5vw, 2rem);
 }
 
 /* Global Styles */
@@ -105,6 +107,7 @@ body {
   height: var(--site-footer-height);
   background-color: var(--site-footer-background-color);
   color: var(--site-footer-font-color);
+  font-size: var(--site-footer-font-size);
 }
 
 .site-footer-content {
@@ -112,6 +115,17 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.site-footer-links {
+  display: flex;
+  gap: var(--site-footer-items-gap);
+  margin-right: var(--site-footer-items-gap);
+}
+
+.site-footer-social-media {
+  display: flex;
+  gap: var(--site-footer-items-gap);
 }
 
 /* Media Queries for Mobile Devices */
