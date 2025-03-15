@@ -16,12 +16,14 @@ export const metadata: Metadata = {
 
 export default function RootLayout({children}: Readonly<{children: React.ReactNode;}>) {
   return (
-    <html lang="en">
-      <body className={`${openSans.variable} antialiased`}>
+    <body>
+      <div className="page-container">
         <Header />
-          <main>{children}</main>
+        <main className="main-content">
+          {children}
+        </main>
         <Footer />
-      </body>
-    </html>
+      </div>
+    </body>
   );
 }

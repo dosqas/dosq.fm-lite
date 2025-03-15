@@ -1,10 +1,11 @@
 "use client"
 
+import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-function UnderConstructionPage() {
+const UnderConstructionPage: React.FC = () => {
     const router = useRouter();
 
     return (
@@ -18,6 +19,6 @@ function UnderConstructionPage() {
         </div>
       </div>
     );
-}
+};
 
 export default UnderConstructionPage;
