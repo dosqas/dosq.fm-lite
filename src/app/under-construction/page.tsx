@@ -1,6 +1,6 @@
 import Image from 'next/image';
 
-function HomePage() {
+function UnderConstructionPage() {
     return (
       <div className="construction-site-content">
         <Image src="/images/page-under-construction.svg" alt="Page Under Construction" width={400} height={400} />
@@ -9,4 +9,4 @@ function HomePage() {
     );
   }
   
-  export default HomePage;
+  export default UnderConstructionPage;
