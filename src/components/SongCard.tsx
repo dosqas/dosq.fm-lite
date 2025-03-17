@@ -11,17 +11,26 @@ interface SongCardProps {
   dateListened: string;
 }
 
-const SongCard: React.FC<SongCardProps> = ({ albumCover, title, artist, album, genre, dateListened  }) => {
+const SongCard: React.FC<SongCardProps> = ({ albumCover, title, artist, album, genre, dateListened }) => {
   return (
     <div className="song-card">
-      <Image className="song-card-image" src={albumCover} alt={`${title} album cover`} width="30" height="30" />
-      <div className="song-card-info">
-        <p className="song-card-title">{title}</p>
-        <p className="song-card-album">{album}</p>
-        <p className="song-card-genre">{genre}</p>
-        <p className="song-card-artist">{artist}</p>
-        <p className="song-card-dateListened">{dateListened}</p>
-      </div>
+        <div className="song-card-content">
+            <Image
+            className="song-card-image"
+            src={albumCover}
+            alt={`${title} album cover`}
+            width="50"
+            height="50"
+            />
+            <div className="song-card-grid">
+            <span className="song-card-title">{title}</span>
+            <span className="song-card-album">{album}</span>
+            <span className="song-card-artist">{artist}</span>
+            <span className="song-card-genre">{genre}</span>
+            <span className="song-card-dateListened">{dateListened}</span>
+            </div>
+        </div>
+      <hr className="song-card-dividing-line" />
     </div>
   );
 };

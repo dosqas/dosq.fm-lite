@@ -236,8 +236,13 @@ const ProfileContent: React.FC = () => {
 
   return (
     <main className="profile-content">
+      <p className="profile-content-title">
+        Recent tracks
+      </p>
+      <div className="profile-content-grid">
         <ProfileSongsCol songs={songs} />
         <ProfileSidebar />
+      </div>
     </main>
   );
 };

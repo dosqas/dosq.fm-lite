@@ -4,7 +4,26 @@
 .profile-content {
     flex: 1;
     display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 80%;
+    margin-bottom: 3rem;
+}
+
+.profile-content-title {
+    font-size: 2rem;
+    font-weight: 400;
+    width: 85%;
+    justify-content: left;
+    margin-top: 0.5rem;
+    color: #ABA8A7;
+}
+
+.profile-content-grid {
+    flex: 1;
+    display: flex;
     flex-direction: row;
     align-items: center;
-    width: 70%;
+    width: 80%;
+    margin-bottom: 3rem;
 }
