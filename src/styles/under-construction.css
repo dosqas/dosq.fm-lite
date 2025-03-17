@@ -1,0 +1,41 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap');
+@import "tailwindcss";
+
+/* Construction Page Content Styles */
+.construction-site-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: var(--page-under-construction-content-height);
+    background-color: var(--page-under-construction-background-color);
+    color: var(--page-under-construction-font-color);
+    font-size: var(--page-under-construction-content-font-size);
+    padding: 2rem;
+  }
+  
+  .construction-site-image {
+    margin-right: 2rem;
+  }
+  
+  .construction-site-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  .construction-page-link {
+    color: #ABA8A7;
+    text-decoration: underline;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+  }
+  
+  .construction-page-link:hover {
+    text-decoration: none;
+    color: #fff;
+  }

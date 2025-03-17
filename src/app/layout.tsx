@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Open_Sans } from "next/font/google";
 import "../styles/globals.css";
+import "../styles/header.css";
+import "../styles/footer.css";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 
@@ -16,14 +18,19 @@ export const metadata: Metadata = {
 
 export default function RootLayout({children}: Readonly<{children: React.ReactNode;}>) {
   return (
-    <body>
-      <div className="page-container">
-        <Header />
-        <main className="main-content">
-          {children}
-        </main>
-        <Footer />
-      </div>
-    </body>
+    <html lang="en">
+      <head>
+        <style>{openSans.variable}</style>
+      </head>
+      <body>
+        <div className="page-container">
+          <Header />
+          <main className="main-content">
+            {children}
+          </main>
+          <Footer />
+        </div>
+      </body>
+    </html>
   );
 }

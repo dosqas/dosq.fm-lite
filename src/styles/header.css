@@ -1,0 +1,63 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap');
+@import "tailwindcss";
+
+/* Header Styles */
+.site-header {
+    display: flex;
+    width: 100%;
+    height: var(--site-header-height);
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--site-header-background-color);
+    padding: 0 var(--site-header-gap-header-sides);
+  }
+  
+  /* Header Content Styles */
+  .site-header-content {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  /* Header Logo Styles */
+  .site-header-logo {
+    font-size: var(--site-header-logo-font-size);
+  }
+  
+  .site-header-logo-dosq-part {
+    color: var(--site-header-logo-dosq-part-font-color);
+    font-weight: 600;
+  }
+  
+  .site-header-logo-fm-part {
+    color: var(--site-header-logo-fm-part-font-color);
+    font-weight: 100;
+  }
+  
+  /* Header User Actions Styles */
+  .site-header-user-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--site-header-gap-user-action-elements);
+  }
+  
+  /* Header Nav Styles */
+  .site-header-nav {
+    display: flex;
+    gap: var(--site-header-gap-user-action-elements);
+    font-size: var(--site-header-nav-font-size);
+    color: #FFFFFF;
+  }
+  
+  /* Header Profile Styles */
+  .site-header-profile {
+    display: flex;
+    align-items: center;
+  }
+  
+  .site-header-profile img {
+    width: var(--site-header-profile-icon-size);
+    height: var(--site-header-profile-icon-size);
+    border-radius: 50%;
+  }

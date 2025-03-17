@@ -1,0 +1,36 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap');
+@import "tailwindcss";
+
+/* Footer Styles */
+.site-footer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: var(--site-footer-height);
+    background-color: var(--site-footer-background-color);
+    color: var(--site-footer-font-color);
+    font-size: var(--site-footer-font-size);
+    padding: 0;
+    margin: 0;
+    width: 100%;
+  }
+  
+  .site-footer-content {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .site-footer-links {
+    display: flex;
+    gap: var(--site-footer-items-gap);
+    margin-right: var(--site-footer-items-gap);
+  }
+  
+  .site-footer-social-media {
+    display: flex;
+    gap: var(--site-footer-items-gap);
+  }
