@@ -20,6 +20,7 @@
     width: 80%;
     background-color: #313131;
     box-sizing: border-box;
+    margin-top: 1rem;
 }
 
 .profile-header-avatar {
