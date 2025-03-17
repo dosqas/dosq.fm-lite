@@ -61,3 +61,30 @@
     height: var(--site-header-profile-icon-size);
     border-radius: 50%;
   }
+
+/* Media Queries for Mobile Devices */
+@media (max-width: 768px) {
+  .site-header {
+    height: auto;
+    padding: var(--site-header-gap-header-sides);
+  }
+
+  .site-header-content {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .site-header-logo {
+    margin-right: var(--site-header-gap-user-action-elements);
+  }
+
+  .site-header-user-actions {
+    width: auto;
+    justify-content: center;
+  }
+
+  .site-header-nav {
+    gap: var(--site-header-gap-user-action-elements);
+    justify-content: center;
+  }
+}

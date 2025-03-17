@@ -1,0 +1,130 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap');
+@import "tailwindcss";
+
+:root {
+    --profile-header-avatar-size: clamp(10rem, 23vh, 13rem);
+    --profile-header-username-font-size: clamp(1.5rem, 3.5vh, 5rem);
+    --profile-header-name-and-dosqing-since-font-size: clamp(0.75rem, 1.75vh, 1.5rem);
+    --profile-header-tabs-font-size: clamp(0.8rem, 2.5vh, 1.75rem);
+    --profile-header-stats-font-size: clamp(0.7rem, 2vh, 1.5rem);
+}
+
+/* Profile Header Styles */
+.profile-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+    margin: 0;
+    padding: 0;
+    width: 80%;
+    background-color: #313131;
+    box-sizing: border-box;
+}
+
+.profile-header-avatar {
+    display: flex;
+    position: relative;
+    align-items: center;
+    justify-content: center;
+    width: var(--profile-header-avatar-size);
+    height: var(--profile-header-avatar-size);
+    border-radius: 100%;
+    overflow: hidden;
+}
+
+.profile-header-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.profile-header-username {
+    color: #dddddd;
+    font-size: var(--profile-header-username-font-size);
+    font-weight: 600;
+}
+
+.profile-header-name-and-dosqing-since {
+    color: #747474;
+    font-size: var(--profile-header-name-and-dosqing-since-font-size);
+}
+
+.profile-header-tabs {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    color: #ABA8A7;
+    font-size: var(--profile-header-tabs-font-size);
+    margin-bottom: 0.5rem;
+}
+
+.profile-header-tabs a {
+    cursor: pointer;
+}
+
+.profile-header-tabs a:hover {
+    text-decoration: underline;
+    text-decoration-color: #B51811;
+    text-underline-offset: 0.5rem;
+    text-decoration-thickness: 0.25rem;
+}
+
+.profile-header-tabs a.active {
+    color: #dddddd;
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-color: #B51811;
+    text-underline-offset: 0.5rem;
+    text-decoration-thickness: 0.25rem;
+}
+
+.profile-header-stats {
+    display: flex;
+    gap: 1rem;
+}
+
+.profile-header-stat {
+    display: flex;
+    flex-direction: column;
+    font-size: var(--profile-header-stats-font-size);
+}
+
+.profile-header-stat-label {
+    color: #7b7b7b;
+    font-weight: 700;
+}
+
+.profile-header-stat-value {
+    color: #ABA8A7;
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    .profile-header {
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        width: 100%;
+    }
+
+    .profile-header-avatar {
+        width: var(--profile-header-avatar-size);
+        height: var(--profile-header-avatar-size);
+    }
+
+    .profile-header-info {
+        text-align: center;
+    }
+
+    .profile-header-tabs {
+        flex-direction: column;
+        gap: 0.8rem;
+    }
+
+    .profile-header-stats {
+        gap: 0.8rem;
+        justify-content: center;
+    }
+}

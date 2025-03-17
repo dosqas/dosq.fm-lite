@@ -27,29 +27,26 @@
   --site-footer-font-color: #ABA8A7;
   --site-footer-font-size: clamp(0.8rem, 2vh, 1.5rem);
   --site-footer-items-gap: clamp(0.25rem, 1.5vw, 2rem);
-
-  /* Page - Under Construction*/
-  --page-under-construction-content-height: clamp(50vh, 90vh, 100vh);
-  --page-under-construction-content-font-size: clamp(1rem, 3vh, 2rem);
-  --page-under-construction-background-color: #252728;
-  --page-under-construction-font-color: #ABA8A7;
-  --page-under-construction-image-size: clamp(10rem, 20vw, 20rem);
 }
 
 /* Global Styles */
-body {
+body, html {
   font-family: var(--font-sans);
   background-color: var(--body-background-color);
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  overflow-y: scroll;
+  width: 100%;
+  height: 100%;
 }
 
 .page-container {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 .main-content {
@@ -60,35 +57,4 @@ body {
   width: 100%; 
   margin: 0 auto;
   padding: 0 1rem;
-}
-
-
-
-
-
-/* Media Queries for Mobile Devices */
-@media (max-width: 768px) {
-  .site-header {
-    height: auto;
-    padding: var(--site-header-gap-header-sides);
-  }
-
-  .site-header-content {
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .site-header-logo {
-    margin-right: var(--site-header-gap-user-action-elements);
-  }
-
-  .site-header-user-actions {
-    width: auto;
-    justify-content: center;
-  }
-
-  .site-header-nav {
-    gap: var(--site-header-gap-user-action-elements);
-    justify-content: center;
-  }
 }

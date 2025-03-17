@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Open_Sans } from "next/font/google";
 import "../styles/globals.css";
-import "../styles/header.css";
-import "../styles/footer.css";
+import "../styles/site-header.css";
+import "../styles/site-footer.css";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 
@@ -25,9 +25,7 @@ export default function RootLayout({children}: Readonly<{children: React.ReactNo
       <body>
         <div className="page-container">
           <Header />
-          <main className="main-content">
-            {children}
-          </main>
+          <main className="main-content">{children}</main>
           <Footer />
         </div>
       </body>

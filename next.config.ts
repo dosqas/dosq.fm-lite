@@ -22,12 +22,7 @@ const nextConfig: NextConfig = {
         source: '/social',
         destination: '/under-construction',
         permanent: false,
-      },
-      {
-        source: '/profile',
-        destination: '/under-construction',
-        permanent: false,
-      },
+      }
     ];
   },
 };
