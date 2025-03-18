@@ -13,6 +13,7 @@
     gap: 0;
     padding: 0;
     font-size: var(--font-size-base);
+    position: relative; 
 }
 
 .song-card-content {
@@ -75,12 +76,13 @@
     margin-top: 0.5rem; 
 }
 
+/* Update the grid layout */
 .song-card-grid {
     display: grid;
-    grid-template-columns: 1.25fr 1.25fr 1.25fr 1fr 1fr; 
+    grid-template-columns: 1.25fr 1.25fr 1.25fr 1fr auto; 
     width: 100%;
     align-items: center;
-    gap: 0.5rem; 
+    gap: 0.5rem;
 }
 
 .song-card-dateListened {
@@ -90,6 +92,87 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     color: #666;
+}
+
+/* Modify Button */
+.song-card-modify-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: background-color 0.3s ease;
+    display: none; 
+}
+
+.song-card:hover .song-card-modify-button {
+    display: block; 
+}
+
+.song-card-modify-button:hover {
+    background-color: #D32F2F;
+}
+
+/* Position the kebab menu */
+.song-card-kebab-menu {
+    grid-column: 6; 
+    justify-self: right; 
+    cursor: pointer;
+    font-size: 1.5rem; 
+    color: #ABA8A7;
+    background: none;
+    border: none;
+    outline: none;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.song-card-kebab-menu:hover {
+    color: #D32F2F; 
+}
+
+/* Menu Overlay */
+.song-card-menu-overlay {
+    position: absolute;
+    right: 10; 
+    border: 1px solid #ABA8A7;
+    padding: 0.5rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+    display: none;
+    display: flex; 
+    gap: 0.5rem;
+    top: -12%;
+}
+
+/* Menu Overlay Active State */
+.song-card-menu-overlay.active {
+    display: flex;
+}
+
+/* Menu Buttons */
+.song-card-menu-button {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background-color: #B51811;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    text-align: center;
+    transition: background-color 0.3s ease;
+    flex: 1;
+}
+
+.song-card-menu-button:hover {
+    background-color: #D32F2F;
 }
 
 /* Media Queries for Smaller Screens */

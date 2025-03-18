@@ -2,7 +2,7 @@ export const formatDateListened = (day: string, month: string, year: string, hou
   const now = new Date();
   const listenedDate = new Date(
     parseInt(year, 10),
-    parseInt(month, 10) - 1, // Months are 0-indexed in JavaScript
+    parseInt(month, 10) - 1, 
     parseInt(day, 10),
     parseInt(hour, 10),
     parseInt(minute, 10)
@@ -14,7 +14,6 @@ export const formatDateListened = (day: string, month: string, year: string, hou
   const diffInDays = Math.floor(diffInHours / 24);
 
   if (diffInDays > 0) {
-    // Format as "17 Mar 19:20"
     const options: Intl.DateTimeFormatOptions = {
       day: "2-digit",
       month: "short",

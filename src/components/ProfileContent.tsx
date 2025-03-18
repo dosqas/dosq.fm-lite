@@ -1,8 +1,6 @@
 "use client"
 
 import React, { useState } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
 import ProfileSongsCol from './ProfileSongsCol';
 import ProfileSidebar from './ProfileSidebar';
 import "../styles/profile-content.css";
@@ -12,12 +10,12 @@ const ProfileContent: React.FC = () => {
   const [songs, setSongs] = useState([
     {
       id: 1,
-      albumCover: '/images/vinyl-icon.svg',
-      title: 'Song 1',
-      artist: 'Artist 1',
-      album: 'Album 1',
-      genre: 'Genre 1',
-      dateListened: '2 hours ago',
+      albumCover: "/images/vinyl-icon.svg",
+      title: "Song 1",
+      artist: "Artist 1",
+      album: "Album 1",
+      genre: "Genre 1",
+      dateListened: "2 hours ago",
     },
     {
       id: 2,
@@ -269,13 +267,30 @@ const ProfileContent: React.FC = () => {
     setSongs([...songs, newSongEntry]);
   };
 
+  const updateSong = (id: number) => {
+    const updatedTitle = prompt("Enter the new title:");
+    if (updatedTitle) {
+      setSongs((prevSongs) =>
+        prevSongs.map((song) =>
+          song.id === id ? { ...song, title: updatedTitle } : song
+        )
+      );
+    }
+  };
+
+  const deleteSong = (id: number) => {
+      setSongs((prevSongs) => prevSongs.filter((song) => song.id !== id));
+  };
+
   return (
     <main className="profile-content">
-      <p className="profile-content-title">
-        Recent tracks
-      </p>
+      <p className="profile-content-title">Recent tracks</p>
       <div className="profile-content-grid">
-        <ProfileSongsCol songs={songs} />
+        <ProfileSongsCol
+          songs={songs}
+          onUpdateSong={updateSong}
+          onDeleteSong={deleteSong}
+        />
         <ProfileSidebar addSong={addSong}/>
       </div>
     </main>

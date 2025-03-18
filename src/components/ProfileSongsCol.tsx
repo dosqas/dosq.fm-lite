@@ -1,5 +1,5 @@
-import React from 'react';
-import SongCard from './SongCard';
+import React, { useState } from "react";
+import SongCard from "./SongCard";
 import "../styles/profile-songs-col.css";
 
 interface ProfileSongsColProps {
@@ -12,9 +12,21 @@ interface ProfileSongsColProps {
     genre: string;
     dateListened: string;
   }[];
+  onUpdateSong: (id: number) => void;
+  onDeleteSong: (id: number) => void;
 }
 
-const ProfileSongsCol: React.FC<ProfileSongsColProps> = ({ songs }) => {
+const ProfileSongsCol: React.FC<ProfileSongsColProps> = ({
+  songs,
+  onUpdateSong,
+  onDeleteSong,
+}) => {
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+
+  const handleToggleMenu = (id: number) => {
+    setOpenMenuId((prev) => (prev === id ? null : id));
+  };
+
   return (
     <div className="profile-songs-col">
       {songs.map((song) => (
@@ -26,6 +38,10 @@ const ProfileSongsCol: React.FC<ProfileSongsColProps> = ({ songs }) => {
           album={song.album}
           genre={song.genre}
           dateListened={song.dateListened}
+          isMenuOpen={openMenuId === song.id}
+          onToggleMenu={() => handleToggleMenu(song.id)}
+          onUpdate={() => onUpdateSong(song.id)}
+          onDelete={() => onDeleteSong(song.id)}
         />
       ))}
     </div>
