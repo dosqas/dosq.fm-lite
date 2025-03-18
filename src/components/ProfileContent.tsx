@@ -14,44 +14,17 @@ const ProfileContent: React.FC = () => {
       title: "Song 1",
       artist: "Artist 1",
       album: "Album 1",
-      genre: "Genre 1",
+      genre: "Pop",
       dateListened: "12:30, 01/01/2025",
     },
     {
       id: 2,
-      albumCover: '/images/vinyl-icon.svg',
-      title: 'Song 2',
-      artist: 'Artist 1',
-      album: 'Album 1',
-      genre: 'Genre 1',
-      dateListened: "12:30, 01/01/2025",
-    },
-    {
-      id: 3,
-      albumCover: '/images/vinyl-icon.svg',
-      title: 'Song 3',
-      artist: 'Artist 1',
-      album: 'Album 1',
-      genre: 'Genre 1',
-      dateListened: "12:30, 01/01/2025",
-    },
-    {
-      id: 4,
-      albumCover: '/images/vinyl-icon.svg',
-      title: 'Song 4',
-      artist: 'Artist 1',
-      album: 'Album 1',
-      genre: 'Genre 1',
-      dateListened: "12:30, 01/01/2025",
-    },
-    {
-      id: 5,
-      albumCover: '/images/vinyl-icon.svg',
-      title: 'Song 5',
-      artist: 'Artist 1',
-      album: 'Album 1',
-      genre: 'Genre 1',
-      dateListened: "12:30, 01/01/2025",
+      albumCover: "/images/vinyl-icon.svg",
+      title: "Song 2",
+      artist: "Artist 2",
+      album: "Album 2",
+      genre: "Rock",
+      dateListened: "14:00, 02/01/2025",
     },
     {
       id: 6,
@@ -248,6 +221,13 @@ const ProfileContent: React.FC = () => {
     year: string;
   } | null>(null);
 
+  const [sortCriteria, setSortCriteria] = useState<"title" | "artist" | "date">(
+    "date"
+  );
+  const [filterGenre, setFilterGenre] = useState<string>("");
+  const [filterAlbum, setFilterAlbum] = useState<string>("");
+  const [filterArtist, setFilterArtist] = useState<string>("");
+
   const addSong = (newSong: {
     title: string;
     artist: string;
@@ -293,7 +273,7 @@ const ProfileContent: React.FC = () => {
     year: string;
   }) => {
     const formattedDate = `${updatedSong.hour}:${updatedSong.minute}, ${updatedSong.day}/${updatedSong.month}/${updatedSong.year}`;
-  
+
     setSongs((prevSongs) =>
       prevSongs.map((song) =>
         song.id === updatedSong.id
@@ -311,7 +291,9 @@ const ProfileContent: React.FC = () => {
   const handleEditSong = (id: number) => {
     const song = songs.find((song) => song.id === id);
     if (song) {
-      const { hour, minute, day, month, year } = parseDateListened(song.dateListened);
+      const { hour, minute, day, month, year } = parseDateListened(
+        song.dateListened
+      );
       setSongToEdit({
         id: song.id,
         title: song.title,
@@ -327,12 +309,88 @@ const ProfileContent: React.FC = () => {
     }
   };
 
+  // Sort and filter songs
+  const sortedAndFilteredSongs = songs
+    .filter((song) =>
+      filterGenre ? song.genre.toLowerCase() === filterGenre.toLowerCase() : true
+    )
+    .filter((song) =>
+      filterAlbum ? song.album.toLowerCase().includes(filterAlbum.toLowerCase()) : true
+    )
+    .filter((song) =>
+      filterArtist ? song.artist.toLowerCase().includes(filterArtist.toLowerCase()) : true
+    )
+    .sort((a, b) => {
+      if (sortCriteria === "title") {
+        return a.title.localeCompare(b.title);
+      } else if (sortCriteria === "artist") {
+        return a.artist.localeCompare(b.artist);
+      } else if (sortCriteria === "date") {
+        const dateA = new Date(
+          Number(parseDateListened(a.dateListened).year),
+          Number(parseDateListened(a.dateListened).month) - 1,
+          Number(parseDateListened(a.dateListened).day),
+          Number(parseDateListened(a.dateListened).hour),
+          Number(parseDateListened(a.dateListened).minute)
+        );
+        const dateB = new Date(
+          Number(parseDateListened(b.dateListened).year),
+          Number(parseDateListened(b.dateListened).month) - 1,
+          Number(parseDateListened(b.dateListened).day),
+          Number(parseDateListened(b.dateListened).hour),
+          Number(parseDateListened(b.dateListened).minute)
+        );
+        return dateB.getTime() - dateA.getTime(); // Sort by most recent first
+      }
+      return 0;
+    });
+
   return (
     <main className="profile-content">
       <p className="profile-content-title">Recent tracks</p>
+      <div className="profile-content-controls" style={{ color: "white" }}>
+        <label>
+          Sort by:
+          <select
+            value={sortCriteria}
+            onChange={(e) => setSortCriteria(e.target.value as "title" | "artist" | "date")}
+          >
+            <option value="date">Date</option>
+            <option value="title">Title</option>
+            <option value="artist">Artist</option>
+          </select>
+        </label>
+        <label>
+          Filter by Genre:
+          <input
+            type="text"
+            placeholder="Enter genre"
+            value={filterGenre}
+            onChange={(e) => setFilterGenre(e.target.value)}
+          />
+        </label>
+        <label>
+          Filter by Album:
+          <input
+            type="text"
+            placeholder="Enter album"
+            value={filterAlbum}
+            onChange={(e) => setFilterAlbum(e.target.value)}
+          />
+        </label>
+        <label>
+          Filter by Artist:
+          <input
+            type="text"
+            placeholder="Enter artist"
+            value={filterArtist}
+            onChange={(e) => setFilterArtist(e.target.value)}
+          />
+        </label>
+      </div>
       <div className="profile-content-grid">
         <ProfileSongsCol
-          songs={songs}
+          songs={sortedAndFilteredSongs}
           onUpdateSong={handleEditSong}
           onDeleteSong={deleteSong}
         />
