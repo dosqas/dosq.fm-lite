@@ -5,15 +5,17 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    width: 80%;
+    align-items: flex-start;
+    justify-content: flex-start;
+    width: 75%;
     margin-bottom: 3rem;
+    height: 100%;
 }
 
 .profile-content-title {
     font-size: 2rem;
     font-weight: 400;
-    width: 85%;
+    width: 100%;
     justify-content: left;
     margin-top: 0.5rem;
     color: #ABA8A7;
@@ -23,7 +25,9 @@
     flex: 1;
     display: flex;
     flex-direction: row;
-    align-items: center;
-    width: 80%;
+    align-items: flex-start;
+    width: 100%;
     margin-bottom: 3rem;
+    height: 100%;
+    gap: 0.5rem;
 }

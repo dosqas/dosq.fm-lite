@@ -1,12 +1,15 @@
-import React from 'react';
+"use client"
+
+import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import ProfileSongsCol from './ProfileSongsCol';
 import ProfileSidebar from './ProfileSidebar';
 import "../styles/profile-content.css";
+import { formatDateListened } from "../utils/dateUtils";
 
 const ProfileContent: React.FC = () => {
-  const songs = [
+  const [songs, setSongs] = useState([
     {
       id: 1,
       albumCover: '/images/vinyl-icon.svg',
@@ -232,7 +235,39 @@ const ProfileContent: React.FC = () => {
       genre: 'Genre 5',
       dateListened: '2 hours ago',
     },
-  ];
+  ]);
+
+  const addSong = (newSong: {
+    title: string;
+    artist: string;
+    album: string;
+    genre: string;
+    hour: string;
+    minute: string;
+    day: string;
+    month: string;
+    year: string;
+  }) => {
+    const formattedDate = formatDateListened(
+      newSong.day,
+      newSong.month,
+      newSong.year,
+      newSong.hour,
+      newSong.minute
+    );
+
+    const newSongEntry = {
+      id: songs.length + 1, 
+      albumCover: "/images/vinyl-icon.svg",
+      title: newSong.title,
+      artist: newSong.artist,
+      album: newSong.album,
+      genre: newSong.genre,
+      dateListened: formattedDate,
+    };
+
+    setSongs([...songs, newSongEntry]);
+  };
 
   return (
     <main className="profile-content">
@@ -241,7 +276,7 @@ const ProfileContent: React.FC = () => {
       </p>
       <div className="profile-content-grid">
         <ProfileSongsCol songs={songs} />
-        <ProfileSidebar />
+        <ProfileSidebar addSong={addSong}/>
       </div>
     </main>
   );

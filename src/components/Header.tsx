@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import Image from 'next/legacy/image';
 
 const Header: React.FC = () => {
   return (
@@ -20,7 +20,7 @@ const Header: React.FC = () => {
             </div>
             <div className="site-header-profile">
                 <Link href="/profile">
-                    <Image src="/images/user-circle.svg" alt="User Profile" width={40} height={40} />   
+                    <Image src="/images/user-circle.svg" alt="User Profile" width={40} height={40} priority/>   
                 </Link>
             </div>
         </div>

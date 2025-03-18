@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import Image from 'next/legacy/image';
 import "../styles/profile-header.css";
 import { usePathname } from 'next/navigation';
 
@@ -13,7 +13,7 @@ const ProfileHeader: React.FC = () => {
         <header className="profile-header">
           <div className="profile-header-content">
               <div className="profile-header-avatar">
-                  <Image src="/images/user-circle.svg" alt="User Avatar" layout="fill" objectFit="contain" />
+                  <Image src="/images/user-circle.svg" alt="User Avatar" layout="fill" objectFit="contain" priority/>
               </div>
               <div className="profile-header-info">
                   <div className="profile-header-username">dosqas</div>

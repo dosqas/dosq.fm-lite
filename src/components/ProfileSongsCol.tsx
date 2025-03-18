@@ -2,18 +2,16 @@ import React from 'react';
 import SongCard from './SongCard';
 import "../styles/profile-songs-col.css";
 
-interface Song {
-  id: number;
-  albumCover: string;
-  title: string;
-  artist: string;
-  album: string;
-  genre: string;
-  dateListened: string;
-}
-
 interface ProfileSongsColProps {
-  songs: Song[];
+  songs: {
+    id: number;
+    albumCover: string;
+    title: string;
+    artist: string;
+    album: string;
+    genre: string;
+    dateListened: string;
+  }[];
 }
 
 const ProfileSongsCol: React.FC<ProfileSongsColProps> = ({ songs }) => {
