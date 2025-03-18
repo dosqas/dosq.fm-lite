@@ -1,31 +1,22 @@
 export const formatDateListened = (day: string, month: string, year: string, hour: string, minute: string): string => {
-  const now = new Date();
-  const listenedDate = new Date(
-    parseInt(year, 10),
-    parseInt(month, 10) - 1, 
-    parseInt(day, 10),
-    parseInt(hour, 10),
-    parseInt(minute, 10)
-  );
+  const formattedDay = day.padStart(2, "0");
+  const formattedMonth = month.padStart(2, "0");
+  const formattedHour = hour.padStart(2, "0");
+  const formattedMinute = minute.padStart(2, "0");
 
-  const diffInMs = now.getTime() - listenedDate.getTime();
-  const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
-  const diffInHours = Math.floor(diffInMinutes / 60);
-  const diffInDays = Math.floor(diffInHours / 24);
+  return `${formattedHour}:${formattedMinute}, ${formattedDay}/${formattedMonth}/${year}`;
+};
 
-  if (diffInDays > 0) {
-    const options: Intl.DateTimeFormatOptions = {
-      day: "2-digit",
-      month: "short",
-      hour: "2-digit",
-      minute: "2-digit",
-    };
-    return listenedDate.toLocaleDateString("en-GB", options);
-  } else if (diffInHours > 0) {
-    return `${diffInHours} hours ago`;
-  } else if (diffInMinutes > 0) {
-    return `${diffInMinutes} minutes ago`;
-  } else {
-    return "Just now";
-  }
+export const parseDateListened = (dateListened: string) => {
+  const [time, date] = dateListened.split(", ");
+  const [hour, minute] = time.split(":");
+  const [day, month, year] = date.split("/");
+
+  return {
+    hour,
+    minute,
+    day,
+    month,
+    year,
+  };
 };

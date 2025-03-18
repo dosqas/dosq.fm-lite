@@ -9,9 +9,7 @@ interface SongCardProps {
   album: string;
   genre: string;
   dateListened: string;
-  isMenuOpen: boolean; 
-  onToggleMenu: () => void; 
-  onUpdate: () => void;
+  onUpdate: () => void; 
   onDelete: () => void; 
 }
 
@@ -22,11 +20,15 @@ const SongCard: React.FC<SongCardProps> = ({
   album,
   genre,
   dateListened,
-  isMenuOpen,
-  onToggleMenu,
   onUpdate,
   onDelete,
 }) => {
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+
+  const toggleMenu = () => {
+    setIsMenuOpen((prev) => !prev);
+  };
+
   return (
     <div className="song-card">
       <div className="song-card-content">
@@ -45,10 +47,10 @@ const SongCard: React.FC<SongCardProps> = ({
           <span className="song-card-dateListened">{dateListened}</span>
           <button
             className="song-card-kebab-menu"
-            onClick={onToggleMenu}
+            onClick={toggleMenu}
             aria-label="Options"
           >
-            &#x22EE; 
+            &#x22EE;
           </button>
         </div>
       </div>
@@ -57,17 +59,17 @@ const SongCard: React.FC<SongCardProps> = ({
           <button
             className="song-card-menu-button"
             onClick={() => {
-              onUpdate();
-              onToggleMenu(); 
+              onUpdate(); 
+              setIsMenuOpen(false); 
             }}
           >
-            Update
+            Modify
           </button>
           <button
             className="song-card-menu-button"
             onClick={() => {
-              onDelete();
-              onToggleMenu();
+              onDelete(); 
+              setIsMenuOpen(false);
             }}
           >
             Delete

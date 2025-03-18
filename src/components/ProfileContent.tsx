@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import React, { useState } from 'react';
-import ProfileSongsCol from './ProfileSongsCol';
-import ProfileSidebar from './ProfileSidebar';
+import React, { useState } from "react";
+import ProfileSongsCol from "./ProfileSongsCol";
+import ProfileSidebar from "./ProfileSidebar";
 import "../styles/profile-content.css";
-import { formatDateListened } from "../utils/dateUtils";
+import { formatDateListened, parseDateListened } from "../utils/dateUtils";
 
 const ProfileContent: React.FC = () => {
   const [songs, setSongs] = useState([
@@ -15,7 +15,7 @@ const ProfileContent: React.FC = () => {
       artist: "Artist 1",
       album: "Album 1",
       genre: "Genre 1",
-      dateListened: "2 hours ago",
+      dateListened: "12:30, 01/01/2025",
     },
     {
       id: 2,
@@ -24,7 +24,7 @@ const ProfileContent: React.FC = () => {
       artist: 'Artist 1',
       album: 'Album 1',
       genre: 'Genre 1',
-      dateListened: '2 hours ago',
+      dateListened: "12:30, 01/01/2025",
     },
     {
       id: 3,
@@ -33,7 +33,7 @@ const ProfileContent: React.FC = () => {
       artist: 'Artist 1',
       album: 'Album 1',
       genre: 'Genre 1',
-      dateListened: '2 hours ago',
+      dateListened: "12:30, 01/01/2025",
     },
     {
       id: 4,
@@ -42,7 +42,7 @@ const ProfileContent: React.FC = () => {
       artist: 'Artist 1',
       album: 'Album 1',
       genre: 'Genre 1',
-      dateListened: '2 hours ago',
+      dateListened: "12:30, 01/01/2025",
     },
     {
       id: 5,
@@ -51,7 +51,7 @@ const ProfileContent: React.FC = () => {
       artist: 'Artist 1',
       album: 'Album 1',
       genre: 'Genre 1',
-      dateListened: '2 hours ago',
+      dateListened: "12:30, 01/01/2025",
     },
     {
       id: 6,
@@ -60,7 +60,7 @@ const ProfileContent: React.FC = () => {
       artist: 'Artist 2',
       album: 'Album 2',
       genre: 'Genre 2',
-      dateListened: '2 hours ago',
+      dateListened: "12:30, 01/01/2025",
     },
     {
       id: 7,
@@ -69,7 +69,7 @@ const ProfileContent: React.FC = () => {
       artist: 'Artist 2',
       album: 'Album 2',
       genre: 'Genre 2',
-      dateListened: '2 hours ago',
+      dateListened: "12:30, 01/01/2025",
     },
     {
       id: 8,
@@ -78,7 +78,7 @@ const ProfileContent: React.FC = () => {
       artist: 'Artist 2',
       album: 'Album 2',
       genre: 'Genre 2',
-      dateListened: '2 hours ago',
+      dateListened: "12:30, 01/01/2025",
     },
     {
       id: 9,
@@ -87,7 +87,7 @@ const ProfileContent: React.FC = () => {
       artist: 'Artist 2',
       album: 'Album 2',
       genre: 'Genre 2',
-      dateListened: '2 hours ago',
+      dateListened: "12:30, 01/01/2025",
     },
     {
       id: 10,
@@ -96,7 +96,7 @@ const ProfileContent: React.FC = () => {
       artist: 'Artist 2',
       album: 'Album 2',
       genre: 'Genre 2',
-      dateListened: '2 hours ago',
+      dateListened: "12:30, 01/01/2025",
     },
     {
       id: 11,
@@ -105,7 +105,7 @@ const ProfileContent: React.FC = () => {
       artist: 'Artist 3',
       album: 'Album 3',
       genre: 'Genre 3',
-      dateListened: '2 hours ago',
+      dateListened: "12:30, 01/01/2025",
     },
     {
       id: 12,
@@ -114,7 +114,7 @@ const ProfileContent: React.FC = () => {
       artist: 'Artist 3',
       album: 'Album 3',
       genre: 'Genre 3',
-      dateListened: '2 hours ago',
+      dateListened: "12:30, 01/01/2025",
     },
     {
       id: 13,
@@ -123,7 +123,7 @@ const ProfileContent: React.FC = () => {
       artist: 'Artist 3',
       album: 'Album 3',
       genre: 'Genre 3',
-      dateListened: '2 hours ago',
+      dateListened: "12:30, 01/01/2025",
     },
     {
       id: 14,
@@ -132,7 +132,7 @@ const ProfileContent: React.FC = () => {
       artist: 'Artist 3',
       album: 'Album 3',
       genre: 'Genre 3',
-      dateListened: '2 hours ago',
+      dateListened: "12:30, 01/01/2025",
     },
     {
       id: 15,
@@ -141,7 +141,7 @@ const ProfileContent: React.FC = () => {
       artist: 'Artist 3',
       album: 'Album 3',
       genre: 'Genre 3',
-      dateListened: '2 hours ago',
+      dateListened: "12:30, 01/01/2025",
     },
     {
       id: 16,
@@ -150,7 +150,7 @@ const ProfileContent: React.FC = () => {
       artist: 'Artist 4',
       album: 'Album 4',
       genre: 'Genre 4',
-      dateListened: '2 hours ago',
+      dateListened: "12:30, 01/01/2025",
     },
     {
       id: 17,
@@ -159,7 +159,7 @@ const ProfileContent: React.FC = () => {
       artist: 'Artist 4',
       album: 'Album 4',
       genre: 'Genre 4',
-      dateListened: '2 hours ago',
+      dateListened: "12:30, 01/01/2025",
     },
     {
       id: 18,
@@ -168,7 +168,7 @@ const ProfileContent: React.FC = () => {
       artist: 'Artist 4',
       album: 'Album 4',
       genre: 'Genre 4',
-      dateListened: '2 hours ago',
+      dateListened: "12:30, 01/01/2025",
     },
     {
       id: 19,
@@ -177,7 +177,7 @@ const ProfileContent: React.FC = () => {
       artist: 'Artist 4',
       album: 'Album 4',
       genre: 'Genre 4',
-      dateListened: '2 hours ago',
+      dateListened: "12:30, 01/01/2025",
     },
     {
       id: 20,
@@ -186,7 +186,7 @@ const ProfileContent: React.FC = () => {
       artist: 'Artist 4',
       album: 'Album 4',
       genre: 'Genre 4',
-      dateListened: '2 hours ago',
+      dateListened: "12:30, 01/01/2025",
     },
     {
       id: 21,
@@ -195,7 +195,7 @@ const ProfileContent: React.FC = () => {
       artist: 'Artist 5',
       album: 'Album 5',
       genre: 'Genre 5',
-      dateListened: '2 hours ago',
+      dateListened: "12:30, 01/01/2025",
     },
     {
       id: 22,
@@ -204,7 +204,7 @@ const ProfileContent: React.FC = () => {
       artist: 'Artist 5',
       album: 'Album 5',
       genre: 'Genre 5',
-      dateListened: '2 hours ago',
+      dateListened: "12:30, 01/01/2025",
     },
     {
       id: 23,
@@ -213,7 +213,7 @@ const ProfileContent: React.FC = () => {
       artist: 'Artist 5',
       album: 'Album 5',
       genre: 'Genre 5',
-      dateListened: '2 hours ago',
+      dateListened: "12:30, 01/01/2025",
     },
     {
       id: 24,
@@ -222,7 +222,7 @@ const ProfileContent: React.FC = () => {
       artist: 'Artist 5',
       album: 'Album 5',
       genre: 'Genre 5',
-      dateListened: '2 hours ago',
+      dateListened: "12:30, 01/01/2025",
     },
     {
       id: 25,
@@ -231,9 +231,22 @@ const ProfileContent: React.FC = () => {
       artist: 'Artist 5',
       album: 'Album 5',
       genre: 'Genre 5',
-      dateListened: '2 hours ago',
+      dateListened: "12:30, 01/01/2025",
     },
   ]);
+
+  const [songToEdit, setSongToEdit] = useState<{
+    id: number;
+    title: string;
+    artist: string;
+    album: string;
+    genre: string;
+    hour: string;
+    minute: string;
+    day: string;
+    month: string;
+    year: string;
+  } | null>(null);
 
   const addSong = (newSong: {
     title: string;
@@ -255,7 +268,7 @@ const ProfileContent: React.FC = () => {
     );
 
     const newSongEntry = {
-      id: songs.length + 1, 
+      id: songs.length + 1,
       albumCover: "/images/vinyl-icon.svg",
       title: newSong.title,
       artist: newSong.artist,
@@ -267,19 +280,51 @@ const ProfileContent: React.FC = () => {
     setSongs([...songs, newSongEntry]);
   };
 
-  const updateSong = (id: number) => {
-    const updatedTitle = prompt("Enter the new title:");
-    if (updatedTitle) {
-      setSongs((prevSongs) =>
-        prevSongs.map((song) =>
-          song.id === id ? { ...song, title: updatedTitle } : song
-        )
-      );
-    }
+  const updateSong = (updatedSong: {
+    id: number;
+    title: string;
+    artist: string;
+    album: string;
+    genre: string;
+    hour: string;
+    minute: string;
+    day: string;
+    month: string;
+    year: string;
+  }) => {
+    const formattedDate = `${updatedSong.hour}:${updatedSong.minute}, ${updatedSong.day}/${updatedSong.month}/${updatedSong.year}`;
+  
+    setSongs((prevSongs) =>
+      prevSongs.map((song) =>
+        song.id === updatedSong.id
+          ? { ...song, ...updatedSong, dateListened: formattedDate }
+          : song
+      )
+    );
+    setSongToEdit(null);
   };
 
   const deleteSong = (id: number) => {
-      setSongs((prevSongs) => prevSongs.filter((song) => song.id !== id));
+    setSongs((prevSongs) => prevSongs.filter((song) => song.id !== id));
+  };
+
+  const handleEditSong = (id: number) => {
+    const song = songs.find((song) => song.id === id);
+    if (song) {
+      const { hour, minute, day, month, year } = parseDateListened(song.dateListened);
+      setSongToEdit({
+        id: song.id,
+        title: song.title,
+        artist: song.artist,
+        album: song.album,
+        genre: song.genre,
+        hour,
+        minute,
+        day,
+        month,
+        year,
+      });
+    }
   };
 
   return (
@@ -288,10 +333,15 @@ const ProfileContent: React.FC = () => {
       <div className="profile-content-grid">
         <ProfileSongsCol
           songs={songs}
-          onUpdateSong={updateSong}
+          onUpdateSong={handleEditSong}
           onDeleteSong={deleteSong}
         />
-        <ProfileSidebar addSong={addSong}/>
+        <ProfileSidebar
+          addSong={addSong}
+          updateSong={updateSong}
+          songToEdit={songToEdit}
+          clearEdit={() => setSongToEdit(null)}
+        />
       </div>
     </main>
   );

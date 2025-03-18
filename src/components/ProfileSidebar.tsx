@@ -15,11 +15,41 @@ interface ProfileSidebarProps {
     month: string;
     year: string;
   }) => void;
+  updateSong: (updatedSong: {
+    id: number;
+    title: string;
+    artist: string;
+    album: string;
+    genre: string;
+    hour: string;
+    minute: string;
+    day: string;
+    month: string;
+    year: string;
+  }) => void;
+  songToEdit: {
+    id: number;
+    title: string;
+    artist: string;
+    album: string;
+    genre: string;
+    hour: string;
+    minute: string;
+    day: string;
+    month: string;
+    year: string;
+  } | null;
+  clearEdit: () => void;
 }
 
-const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ addSong }) => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [formData, setFormData] = useState({
+const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
+  addSong,
+  updateSong,
+  songToEdit,
+  clearEdit,
+}) => {
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const [formData, setFormData] = React.useState({
     title: "",
     artist: "",
     album: "",
@@ -35,7 +65,8 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ addSong }) => {
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
-    setSuccessMessage(null);
+    setSuccessMessage(null); 
+    setErrors([]); 
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -74,7 +105,12 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ addSong }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (validateForm()) {
-      addSong(formData); // Add the new song to the list
+      if (songToEdit) {
+        updateSong({ ...formData, id: songToEdit.id }); 
+        clearEdit(); 
+      } else {
+        addSong(formData); 
+      }
       setFormData({
         title: "",
         artist: "",
@@ -87,9 +123,33 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ addSong }) => {
         year: "",
       });
       setErrors([]);
-      setSuccessMessage("Track added successfully!");
+      setSuccessMessage(
+        songToEdit ? "Track updated successfully!" : "Track added successfully!"
+      );
     }
   };
+
+  React.useEffect(() => {
+    if (songToEdit) {
+      setFormData(songToEdit); 
+      setIsMenuOpen(true);
+    } else {
+      setFormData({
+        title: "",
+        artist: "",
+        album: "",
+        genre: "",
+        hour: "",
+        minute: "",
+        day: "",
+        month: "",
+        year: "",
+      });
+      setIsMenuOpen(false); 
+    }
+    setSuccessMessage(null); 
+    setErrors([]); 
+  }, [songToEdit]);
 
   return (
     <div className="profile-sidebar">
@@ -107,9 +167,11 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ addSong }) => {
         </button>
       </div>
 
-      {isMenuOpen && (
+      {(isMenuOpen || songToEdit) && (
         <div className="add-track-menu">
-          <h3 className="add-track-main-label">Add a New Track</h3>
+          <h3 className="add-track-main-label">
+            {songToEdit ? "Update Track" : "Add a New Track"}
+          </h3>
           <form className="add-track-form" onSubmit={handleSubmit}>
             <label className="add-track-label">
               Song Title:
@@ -230,7 +292,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ addSong }) => {
               </div>
             )}
             <button type="submit" className="submit-track-button">
-              Submit
+              {songToEdit ? "Update" : "Submit"}
             </button>
           </form>
         </div>
