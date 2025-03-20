@@ -5,6 +5,8 @@ import ProfileSongsCol from "./ProfileSongsCol";
 import ProfileSidebar from "./ProfileSidebar";
 import "../styles/profile-content.css";
 import { formatDateListened, parseDateListened } from "../utils/dateUtils";
+import { serialize } from "v8";
+import { filterAndSortSongs } from "../utils/filterAndSortUtils";
 
 const ProfileContent: React.FC = () => {
   const [songs, setSongs] = useState([
@@ -221,12 +223,13 @@ const ProfileContent: React.FC = () => {
     year: string;
   } | null>(null);
 
-  const [sortCriteria, setSortCriteria] = useState<"title" | "artist" | "date">(
+  const [sortCriteria, setSortCriteria] = useState<"title" | "artist" | "date" | "title">(
     "date"
   );
   const [filterGenre, setFilterGenre] = useState<string>("");
   const [filterAlbum, setFilterAlbum] = useState<string>("");
   const [filterArtist, setFilterArtist] = useState<string>("");
+  const [filterTitle, setFilterTitle] = useState<string>("");
 
   const addSong = (newSong: {
     title: string;
@@ -309,46 +312,19 @@ const ProfileContent: React.FC = () => {
     }
   };
 
-  // Sort and filter songs
-  const sortedAndFilteredSongs = songs
-    .filter((song) =>
-      filterGenre ? song.genre.toLowerCase() === filterGenre.toLowerCase() : true
-    )
-    .filter((song) =>
-      filterAlbum ? song.album.toLowerCase().includes(filterAlbum.toLowerCase()) : true
-    )
-    .filter((song) =>
-      filterArtist ? song.artist.toLowerCase().includes(filterArtist.toLowerCase()) : true
-    )
-    .sort((a, b) => {
-      if (sortCriteria === "title") {
-        return a.title.localeCompare(b.title);
-      } else if (sortCriteria === "artist") {
-        return a.artist.localeCompare(b.artist);
-      } else if (sortCriteria === "date") {
-        const dateA = new Date(
-          Number(parseDateListened(a.dateListened).year),
-          Number(parseDateListened(a.dateListened).month) - 1,
-          Number(parseDateListened(a.dateListened).day),
-          Number(parseDateListened(a.dateListened).hour),
-          Number(parseDateListened(a.dateListened).minute)
-        );
-        const dateB = new Date(
-          Number(parseDateListened(b.dateListened).year),
-          Number(parseDateListened(b.dateListened).month) - 1,
-          Number(parseDateListened(b.dateListened).day),
-          Number(parseDateListened(b.dateListened).hour),
-          Number(parseDateListened(b.dateListened).minute)
-        );
-        return dateB.getTime() - dateA.getTime(); // Sort by most recent first
-      }
-      return 0;
-    });
+  const sortedAndFilteredSongs = filterAndSortSongs(
+    songs,
+    filterTitle,
+    filterArtist,
+    filterAlbum,
+    filterGenre,
+    sortCriteria
+  );
 
   return (
     <main className="profile-content">
       <p className="profile-content-title">Recent tracks</p>
-      <div className="profile-content-controls" style={{ color: "white" }}>
+      <div className="profile-content-controls" style={{ fontSize: "0.8rem" }}>
         <label>
           Sort by:
           <select
@@ -360,7 +336,7 @@ const ProfileContent: React.FC = () => {
             <option value="artist">Artist</option>
           </select>
         </label>
-        <label>
+        <label style={{ color: "white" }}>
           Filter by Genre:
           <input
             type="text"
@@ -369,7 +345,7 @@ const ProfileContent: React.FC = () => {
             onChange={(e) => setFilterGenre(e.target.value)}
           />
         </label>
-        <label>
+        <label style={{ color: "white" }}>
           Filter by Album:
           <input
             type="text"
@@ -378,13 +354,22 @@ const ProfileContent: React.FC = () => {
             onChange={(e) => setFilterAlbum(e.target.value)}
           />
         </label>
-        <label>
+        <label style={{ color: "white" }}>
           Filter by Artist:
           <input
             type="text"
             placeholder="Enter artist"
             value={filterArtist}
             onChange={(e) => setFilterArtist(e.target.value)}
+          />
+        </label>
+        <label style={{ color: "white" }}>
+          Filter by Title:
+          <input
+            type="text"
+            placeholder="Enter Title"
+            value={filterTitle}
+            onChange={(e) => setFilterTitle(e.target.value)}
           />
         </label>
       </div>
