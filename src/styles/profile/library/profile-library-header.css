@@ -1,0 +1,28 @@
+/* Header with Tabs */
+.library-header {
+  display: flex;
+  justify-content: left;
+  align-items: center;
+  margin-bottom: 20px;
+  width: 100%;
+  gap: 1.5rem;
+}
+
+.library-tab {
+  padding: 10px 20px;
+  background-color: #333;
+  color: #ABA8A7;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.library-tab:hover {
+  background-color: #444;
+}
+
+.library-tab.active {
+  background-color: #B51811;
+  color: #fff;
+}

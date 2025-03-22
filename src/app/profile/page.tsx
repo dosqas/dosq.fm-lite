@@ -2,7 +2,7 @@ import ProfileHeader from "@/components/profile/shared/ProfileHeader";
 import ProfileOverviewContent from "@/components/profile/overview/ProfileOverviewContent";
 import "../../styles/profile/profile.css";
 
-const ProfilePage: React.FC = () => {
+const ProfileOverviewPage: React.FC = () => {
   return (
     <div className="profile-page">
         <ProfileHeader />
@@ -11,4 +11,4 @@ const ProfilePage: React.FC = () => {
   );
 }
 
-export default ProfilePage;
+export default ProfileOverviewPage;

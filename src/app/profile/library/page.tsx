@@ -1,14 +1,14 @@
-import ProfileHeader from "@/components/profile-components/Shared/ProfileHeader";
-import ProfileContent from "@/components/ProfileContent";
-import "../../../styles/profile.css";
+import ProfileHeader from "@/components/profile/shared/ProfileHeader";
+import ProfileLibraryContent from "@/components/profile/library/ProfileLibraryContent";
+import "../../../styles/profile/profile.css";
 
-const ProfilePage: React.FC = () => {
+const ProfileLibraryPage: React.FC = () => {
   return (
     <div className="profile-page">
         <ProfileHeader />
-        <ProfileContent />
+        <ProfileLibraryContent />
     </div>
   );
 }
 
-export default ProfilePage;
+export default ProfileLibraryPage;

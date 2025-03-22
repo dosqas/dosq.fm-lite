@@ -12,7 +12,7 @@ const ProfileContent: React.FC = () => {
     <main className="profile-content">
       <p className="profile-content-title">Recent tracks</p>
       <div className="profile-content-grid">
-        <ProfileSongsCol ref={profileSongsColRef} />
+        <ProfileSongsCol ref={profileSongsColRef}  />
         <ProfileOverviewSidebar trackingRef={profileSongsColRef} />
       </div>
     </main>
