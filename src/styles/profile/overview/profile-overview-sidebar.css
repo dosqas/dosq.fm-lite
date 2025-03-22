@@ -1,0 +1,52 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap');
+@import "tailwindcss";
+
+/* Profile Sidebar */
+.profile-sidebar {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  width: 30%;
+  align-items: flex-start;
+  justify-content: flex-start;
+  height: auto;
+  color: #ABA8A7;
+  box-sizing: border-box;
+}
+
+.profile-sidebar-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  width: 100%;
+  gap: 0.25rem;
+}
+
+.profile-sidebar-divider {
+  width: 100%;
+  height: 1px;
+  background-color: #ABA8A7;
+  margin: 0.5rem 0;
+}
+
+.profile-sidebar-add-track-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0.5rem;
+  background-color: #B51811;
+  color: #FFFFFF;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.profile-sidebar-add-track-button:hover {
+  background-color: #D32F2F;
+}
+
+.profile-sidebar-add-track-button:active {
+  background-color: #B51811;
+}

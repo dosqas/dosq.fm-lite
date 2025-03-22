@@ -1,6 +1,6 @@
 import React from "react";
 import Image from "next/image";
-import "../styles/song-card.css";
+import "../../../../styles/profile/overview/common/song-card.css";
 
 interface SongCardProps {
   albumCover: string;

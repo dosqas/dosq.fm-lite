@@ -1,4 +1,4 @@
-import ProfileHeader from "@/components/ProfileHeader";
+import ProfileHeader from "@/components/profile-components/Shared/ProfileHeader";
 import ProfileContent from "@/components/ProfileContent";
 import "../../../styles/profile.css";
 

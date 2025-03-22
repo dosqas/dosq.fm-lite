@@ -1,12 +1,12 @@
-import ProfileHeader from "@/components/ProfileHeader";
-import ProfileContent from "@/components/ProfileContent";
-import "../../styles/profile.css";
+import ProfileHeader from "@/components/profile/shared/ProfileHeader";
+import ProfileOverviewContent from "@/components/profile/overview/ProfileOverviewContent";
+import "../../styles/profile/profile.css";
 
 const ProfilePage: React.FC = () => {
   return (
     <div className="profile-page">
         <ProfileHeader />
-        <ProfileContent />
+        <ProfileOverviewContent />
     </div>
   );
 }

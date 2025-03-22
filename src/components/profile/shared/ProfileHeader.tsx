@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/legacy/image';
-import "../styles/profile-header.css";
+import "../../../styles/profile/shared/profile-header.css";
 import { usePathname } from 'next/navigation';
 
 const ProfileHeader: React.FC = () => {
