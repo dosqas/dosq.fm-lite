@@ -3,6 +3,15 @@ import SongCard from "./SongCard";
 import UpdateTrackMenu from "./track-menu/UpdateTrackMenu";
 import AddTrackMenu from "./track-menu/AddTrackMenu";
 import { validateForm } from "../../../../utils/formUtils";
+import {
+  addSong,
+  updateSong,
+  deleteSong,
+  filterSongs,
+  groupSongsByDate,
+  assignHrColor,
+  sortSongs,
+} from "../../../../utils/crudUtils";
 import "../../../../styles/profile/overview/common/profile-songs-col.css";
 
 interface Song {
@@ -484,7 +493,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
         month: padWithZero(formData.month),
       };
 
-      setSongs((prevSongs) => sortSongs([...prevSongs, formattedSong]));
+      setSongs((prevSongs) => addSong(prevSongs, formattedSong));
       setSuccessMessage("Track added successfully!");
       setError(null);
       handleCloseAddMenu();
@@ -518,38 +527,12 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
         month: padWithZero(updatedSong.month || ""),
       };
 
-      setSongs((prevSongs) =>
-        sortSongs(
-          prevSongs.map((song) =>
-            song.id === id ? { ...song, ...formattedSong } : song
-          )
-        )
-      );
+      setSongs((prevSongs) => updateSong(prevSongs, id, formattedSong));
       handleCloseUpdateMenu();
     };
 
     const handleDeleteSong = (id: number) => {
-      setSongs((prevSongs) => prevSongs.filter((song) => song.id !== id));
-    };
-
-    const sortSongs = (songs: Song[]) => {
-      return songs.sort((a, b) => {
-        const dateA = new Date(
-          parseInt(a.year),
-          parseInt(a.month) - 1,
-          parseInt(a.day),
-          parseInt(a.hour),
-          parseInt(a.minute)
-        );
-        const dateB = new Date(
-          parseInt(b.year),
-          parseInt(b.month) - 1,
-          parseInt(b.day),
-          parseInt(b.hour),
-          parseInt(b.minute)
-        );
-        return dateB.getTime() - dateA.getTime(); 
-      });
+      setSongs((prevSongs) => deleteSong(prevSongs, id));
     };
 
     const padWithZero = (value: string) => {
@@ -563,12 +546,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
         result = result.filter(filterByDate);
       }
     
-      result = result.filter((song) => {
-        if (selectedYear && song.year !== selectedYear) return false;
-        if (selectedMonth && song.month !== selectedMonth.padStart(2, "0")) return false; 
-        if (selectedDay && song.day !== selectedDay.padStart(2, "0")) return false; 
-        return true;
-      });
+      result = result.filter((song) => filterSongs([song], selectedYear, selectedMonth, selectedDay).length > 0);
     
       return result;
     }, [songs, filterByDate, selectedYear, selectedMonth, selectedDay]);
@@ -629,49 +607,14 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
     const pageNumbers = generatePageNumbers();
 
     const groupedData = useMemo(() => {
-      const data: { [key: string]: number } = {};
-    
-      if (!selectedYear) {
-        songs.forEach((song) => {
-          data[song.year] = (data[song.year] || 0) + 1;
-        });
-      } else if (!selectedMonth) {
-        songs
-          .filter((song) => song.year === selectedYear)
-          .forEach((song) => {
-            const monthKey = song.month.padStart(2, "0"); 
-            data[monthKey] = (data[monthKey] || 0) + 1;
-          });
-      } else {
-        songs
-          .filter((song) => song.year === selectedYear && song.month === selectedMonth.padStart(2, "0"))
-          .forEach((song) => {
-            const dayKey = song.day.padStart(2, "0");
-            data[dayKey] = (data[dayKey] || 0) + 1;
-          });
-      }
-    
-      return data;
+      return groupSongsByDate(filteredSongs, selectedYear, selectedMonth);
     }, [songs, selectedYear, selectedMonth]);
 
     useEffect(() => {
       if (onGroupedData)
         onGroupedData!(groupedData);
     }, [groupedData, onGroupedData]);
-
-    const assignHrColor = (index: number, total: number) => {
-      const topThreshold = Math.floor(total / 3);
-      const middleThreshold = Math.floor((2 * total) / 3);
-
-      if (index < topThreshold) {
-        return "green"; 
-      } else if (index < middleThreshold) {
-        return "orange";
-      } else {
-        return "red"; 
-      }
-    };
-
+    
     return (
       <div className="profile-songs-col">
         {paginatedSongs.map((song, index) => {

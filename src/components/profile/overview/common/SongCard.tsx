@@ -32,7 +32,7 @@ const SongCard: React.FC<SongCardProps> = ({
   };
 
   return (
-    <div className="song-card" style = {{ color: `${hrColor || "transparent"}`}}>
+    <div className="song-card" style = {{ color: `${hrColor || "transparent"}`}} data-testid="song-card">
       <div className="song-card-content">
         <Image
           className="song-card-image"
