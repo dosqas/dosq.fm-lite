@@ -659,21 +659,39 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
         onGroupedData!(groupedData);
     }, [groupedData, onGroupedData]);
 
+    const assignHrColor = (index: number, total: number) => {
+      const topThreshold = Math.floor(total / 3);
+      const middleThreshold = Math.floor((2 * total) / 3);
+
+      if (index < topThreshold) {
+        return "green"; 
+      } else if (index < middleThreshold) {
+        return "orange";
+      } else {
+        return "red"; 
+      }
+    };
+
     return (
       <div className="profile-songs-col">
-        {paginatedSongs.map((song) => (
-          <SongCard
-            key={song.id}
-            albumCover={song.albumCover}
-            title={song.title}
-            artist={song.artist}
-            album={song.album}
-            genre={song.genre}
-            dateListened={`${song.hour}:${song.minute}, ${song.day}/${song.month}/${song.year}`}
-            onUpdate={() => handleOpenUpdateMenu(song)}
-            onDelete={() => handleDeleteSong(song.id)}
-          />
-        ))}
+        {paginatedSongs.map((song, index) => {
+          const hrColor = assignHrColor(index + (currentPage - 1) * 25, filteredSongs.length);
+
+          return (
+            <SongCard
+              key={song.id}
+              albumCover={song.albumCover}
+              title={song.title}
+              artist={song.artist}
+              album={song.album}
+              genre={song.genre}
+              dateListened={`${song.hour}:${song.minute}, ${song.day}/${song.month}/${song.year}`}
+              onUpdate={() => handleOpenUpdateMenu(song)}
+              onDelete={() => handleDeleteSong(song.id)}
+              hrColor={hrColor}
+            />
+          );
+        })}
 
         <div className="pagination-controls">
           <div className="pagination-button-container" style={{ flex: "1 1 25%" }}>

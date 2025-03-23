@@ -11,6 +11,7 @@ interface SongCardProps {
   dateListened: string;
   onUpdate: () => void; 
   onDelete: () => void; 
+  hrColor?: string;
 }
 
 const SongCard: React.FC<SongCardProps> = ({
@@ -22,6 +23,7 @@ const SongCard: React.FC<SongCardProps> = ({
   dateListened,
   onUpdate,
   onDelete,
+  hrColor,
 }) => {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
 
@@ -30,7 +32,7 @@ const SongCard: React.FC<SongCardProps> = ({
   };
 
   return (
-    <div className="song-card">
+    <div className="song-card" style = {{ color: `${hrColor || "transparent"}`}}>
       <div className="song-card-content">
         <Image
           className="song-card-image"
