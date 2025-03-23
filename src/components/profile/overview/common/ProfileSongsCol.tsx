@@ -21,6 +21,7 @@ interface Song {
 
 export interface ProfileSongsColHandle {
   openAddMenu: () => void;
+  resetPage: () => void;
 }
 
 interface ProfileSongsColProps {
@@ -29,6 +30,7 @@ interface ProfileSongsColProps {
   selectedMonth?: string | null;
   selectedDay?: string | null;
   onGroupedData?: (data: { [key: string]: number }) => void; 
+  onPageChange?: (page: number) => void;
 }
 
 const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
@@ -361,8 +363,15 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
       },
     ]);
 
-    const [currentPage, setCurrentPage] = useState(1); // Current page state
-    const itemsPerPage = 25; // Maximum number of songs per page
+    const [currentPage, setCurrentPage] = useState(1); 
+    const itemsPerPage = 25;
+
+    useImperativeHandle(ref, () => ({
+      openAddMenu: handleOpenAddMenu,
+      resetPage: () => {
+        setCurrentPage(1);
+      },
+    }));
 
     const generateRandomSong = (): Song => {
       const randomId = Date.now();
@@ -392,7 +401,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
 
     useEffect(() => {
       const interval = setInterval(() => {
-        setSongs((prevSongs) => [...prevSongs, generateRandomSong()]);
+        setSongs((prevSongs) => sortSongs([...prevSongs, generateRandomSong()]));
       }, 1000);
     
       const timeout = setTimeout(() => {
@@ -428,6 +437,9 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
 
     useImperativeHandle(ref, () => ({
       openAddMenu: handleOpenAddMenu,
+      resetPage: () => {
+        setCurrentPage(1);
+      },
     }));
 
     const handleOpenAddMenu = () => {
@@ -546,31 +558,31 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
 
     const filteredSongs = useMemo(() => {
       let result = songs;
+    
       if (filterByDate) {
         result = result.filter(filterByDate);
       }
+    
       result = result.filter((song) => {
         if (selectedYear && song.year !== selectedYear) return false;
-        if (selectedMonth && song.month !== selectedMonth) return false;
-        if (selectedDay && song.day !== selectedDay) return false;
+        if (selectedMonth && song.month !== selectedMonth.padStart(2, "0")) return false; 
+        if (selectedDay && song.day !== selectedDay.padStart(2, "0")) return false; 
         return true;
       });
+    
       return result;
     }, [songs, filterByDate, selectedYear, selectedMonth, selectedDay]);
 
-    // Calculate paginated songs
     const totalPages = Math.ceil(filteredSongs.length / itemsPerPage);
     const paginatedSongs = filteredSongs.slice(
       (currentPage - 1) * itemsPerPage,
       currentPage * itemsPerPage
     );
 
-    // Handle page click
     const handlePageClick = (pageNumber: number) => {
       setCurrentPage(pageNumber);
     };
 
-    // Handle Previous and Next buttons
     const handlePreviousPage = () => {
       if (currentPage > 1) {
         setCurrentPage((prevPage) => prevPage - 1);
@@ -583,38 +595,31 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
       }
     };
 
-    // Generate page numbers with ellipses
     const generatePageNumbers = () => {
       const pageNumbers: (number | string)[] = [];
-      const maxVisiblePages = 5; // Number of visible pages around the current page
+      const maxVisiblePages = 5; 
 
       if (totalPages <= maxVisiblePages) {
-        // Show all pages if total pages are less than or equal to maxVisiblePages
         for (let i = 1; i <= totalPages; i++) {
           pageNumbers.push(i);
         }
       } else {
-        // Add first page
         pageNumbers.push(1);
 
-        // Add ellipsis if currentPage is far from the start
         if (currentPage > 3) {
           pageNumbers.push("...");
         }
 
-        // Add pages around the current page
         const startPage = Math.max(2, currentPage - 1);
         const endPage = Math.min(totalPages - 1, currentPage + 1);
         for (let i = startPage; i <= endPage; i++) {
           pageNumbers.push(i);
         }
 
-        // Add ellipsis if currentPage is far from the end
         if (currentPage < totalPages - 2) {
           pageNumbers.push("...");
         }
 
-        // Add last page
         pageNumbers.push(totalPages);
       }
 
@@ -625,7 +630,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
 
     const groupedData = useMemo(() => {
       const data: { [key: string]: number } = {};
-
+    
       if (!selectedYear) {
         songs.forEach((song) => {
           data[song.year] = (data[song.year] || 0) + 1;
@@ -634,16 +639,18 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
         songs
           .filter((song) => song.year === selectedYear)
           .forEach((song) => {
-            data[song.month] = (data[song.month] || 0) + 1;
+            const monthKey = song.month.padStart(2, "0"); 
+            data[monthKey] = (data[monthKey] || 0) + 1;
           });
       } else {
         songs
-          .filter((song) => song.year === selectedYear && song.month === selectedMonth)
+          .filter((song) => song.year === selectedYear && song.month === selectedMonth.padStart(2, "0"))
           .forEach((song) => {
-            data[song.day] = (data[song.day] || 0) + 1;
+            const dayKey = song.day.padStart(2, "0");
+            data[dayKey] = (data[dayKey] || 0) + 1;
           });
       }
-
+    
       return data;
     }, [songs, selectedYear, selectedMonth]);
 

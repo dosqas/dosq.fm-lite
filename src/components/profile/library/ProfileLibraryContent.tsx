@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import LibraryHeader from "./ProfileLibraryHeader";
-import ProfileSongsCol from "../overview/common/ProfileSongsCol";
+import ProfileSongsCol, { ProfileSongsColHandle } from "../overview/common/ProfileSongsCol";
 import LibrarySidebar from "./ProfileLibrarySidebar";
 import "../../../styles/profile/library/profile-library-content.css";
 
 interface GroupedData {
-  [key: string]: number; // e.g., { "2023": 10, "2024": 15 }
+  [key: string]: number;
 }
 
 const ProfileLibraryContent: React.FC = () => {
@@ -17,11 +17,18 @@ const ProfileLibraryContent: React.FC = () => {
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
 
   const [groupedData, setGroupedData] = useState<GroupedData>({});
+  const [currentPage, setCurrentPage] = useState(1);
 
-  // Callback to handle grouped data from ProfileSongsCol
   const handleGroupedData = (data: GroupedData) => {
     setGroupedData(data);
   };
+
+  const handlePageChange = (pageNumber: number) => {
+    setCurrentPage(pageNumber);
+  };
+
+  // Create a ref for ProfileSongsCol
+  const songsColRef = useRef<ProfileSongsColHandle>(null);
 
   return (
     <div className="profile-library-content">
@@ -33,16 +40,30 @@ const ProfileLibraryContent: React.FC = () => {
 
       <div className="profile-library-content-grid">
         <ProfileSongsCol
+          ref={songsColRef} 
           selectedYear={selectedYear}
           selectedMonth={selectedMonth}
           selectedDay={selectedDay}
           onGroupedData={handleGroupedData} 
+          onPageChange={handlePageChange}
         />
         <LibrarySidebar
           groupedData={groupedData}
-          onYearSelect={setSelectedYear}
-          onMonthSelect={setSelectedMonth}
-          onDaySelect={setSelectedDay}
+          onYearSelect={(year) => {
+            setSelectedYear(year);
+            handlePageChange(1);
+            songsColRef.current?.resetPage();
+          }}
+          onMonthSelect={(month) => {
+            setSelectedMonth(month);
+            handlePageChange(1); 
+            songsColRef.current?.resetPage();
+          }}
+          onDaySelect={(day) => {
+            setSelectedDay(day);
+            handlePageChange(1);
+            songsColRef.current?.resetPage(); 
+          }}
           selectedYear={selectedYear}
           selectedMonth={selectedMonth}
         />
