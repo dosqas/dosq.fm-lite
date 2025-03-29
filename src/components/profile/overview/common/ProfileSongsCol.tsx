@@ -4,15 +4,7 @@ import SongCard from "./SongCard";
 import UpdateTrackMenu from "./track-menu/UpdateTrackMenu";
 import AddTrackMenu from "./track-menu/AddTrackMenu";
 import { validateForm } from "../../../../utils/formUtils";
-import {
-  addSong,
-  updateSong,
-  deleteSong,
-  filterSongs,
-  groupSongsByDate,
-  assignHrColor,
-  sortSongs,
-} from "../../../../utils/crudUtils";
+import { assignHrColor } from "../../../../utils/songUtils";
 import "../../../../styles/profile/overview/common/profile-songs-col.css";
 
 export interface ProfileSongsColHandle {
@@ -31,337 +23,11 @@ interface ProfileSongsColProps {
 
 const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
   ({ filterByDate, selectedYear, selectedMonth, selectedDay, onGroupedData }, ref) => {
-    const [songs, setSongs] = useState<Song[]>([
-      {
-        id: 1,
-        albumCover: "/images/vinyl-icon.svg",
-        title: "Song 1",
-        artist: "Artist 1",
-        album: "Album 1",
-        genre: "Genre 1",
-        hour: "12",
-        minute: "30",
-        day: "01",
-        month: "01",
-        year: "2025",
-      },
-      {
-        id: 2,
-        albumCover: "/images/vinyl-icon.svg",
-        title: "Song 2",
-        artist: "Artist 1",
-        album: "Album 1",
-        genre: "Genre 1",
-        hour: "14",
-        minute: "00",
-        day: "02",
-        month: "01",
-        year: "2024",
-      },
-      {
-        id: 3,
-        albumCover: "/images/vinyl-icon.svg",
-        title: "Song 3",
-        artist: "Artist 1",
-        album: "Album 1",
-        genre: "Genre 1",
-        hour: "14",
-        minute: "00",
-        day: "03",
-        month: "01",
-        year: "2023",
-      },
-      {
-        id: 4,
-        albumCover: "/images/vinyl-icon.svg",
-        title: "Song 4",
-        artist: "Artist 1",
-        album: "Album 1",
-        genre: "Genre 1",
-        hour: "14",
-        minute: "00",
-        day: "04",
-        month: "01",
-        year: "2022",
-      },
-      {
-        id: 5,
-        albumCover: "/images/vinyl-icon.svg",
-        title: "Song 5",
-        artist: "Artist 1",
-        album: "Album 1",
-        genre: "Genre 1",
-        hour: "14",
-        minute: "00",
-        day: "05",
-        month: "01",
-        year: "2024",
-      },
-      {
-        id: 6,
-        albumCover: '/images/vinyl-icon.svg',
-        title: 'Song 6',
-        artist: 'Artist 2',
-        album: 'Album 2',
-        genre: 'Genre 2',
-        hour: "12",
-        minute: "30",
-        day: "06",
-        month: "01",
-        year: "2023",
-      },
-      {
-        id: 7,
-        albumCover: '/images/vinyl-icon.svg',
-        title: 'Song 7',
-        artist: 'Artist 2',
-        album: 'Album 2',
-        genre: 'Genre 2',
-        hour: "12",
-        minute: "30",
-        day: "07",
-        month: "01",
-        year: "2023",
-      },
-      {
-        id: 8,
-        albumCover: '/images/vinyl-icon.svg',
-        title: 'Song 8',
-        artist: 'Artist 2',
-        album: 'Album 2',
-        genre: 'Genre 2',
-        hour: "12",
-        minute: "30",
-        day: "08",
-        month: "01",
-        year: "2024",
-      },
-      {
-        id: 9,
-        albumCover: '/images/vinyl-icon.svg',
-        title: 'Song 9',
-        artist: 'Artist 2',
-        album: 'Album 2',
-        genre: 'Genre 2',
-        hour: "12",
-        minute: "30",
-        day: "09",
-        month: "01",
-        year: "2022",
-      },
-      {
-        id: 10,
-        albumCover: '/images/vinyl-icon.svg',
-        title: 'Song 10',
-        artist: 'Artist 2',
-        album: 'Album 2',
-        genre: 'Genre 2',
-        hour: "12",
-        minute: "30",
-        day: "10",
-        month: "01",
-        year: "2024",
-      },
-      {
-        id: 11,
-        albumCover: '/images/vinyl-icon.svg',
-        title: 'Song 11',
-        artist: 'Artist 3',
-        album: 'Album 3',
-        genre: 'Genre 3',
-        hour: "12",
-        minute: "30",
-        day: "11",
-        month: "01",
-        year: "2023",
-      },
-      {
-        id: 12,
-        albumCover: '/images/vinyl-icon.svg',
-        title: 'Song 12',
-        artist: 'Artist 3',
-        album: 'Album 3',
-        genre: 'Genre 3',
-        hour: "12",
-        minute: "30",
-        day: "12",
-        month: "01",
-        year: "2025",
-      },
-      {
-        id: 13,
-        albumCover: '/images/vinyl-icon.svg',
-        title: 'Song 13',
-        artist: 'Artist 3',
-        album: 'Album 3',
-        genre: 'Genre 3',
-        hour: "12",
-        minute: "30",
-        day: "12",
-        month: "01",
-        year: "2025",
-      },
-      {
-        id: 14,
-        albumCover: '/images/vinyl-icon.svg',
-        title: 'Song 14',
-        artist: 'Artist 3',
-        album: 'Album 3',
-        genre: 'Genre 3',
-        hour: "12",
-        minute: "30",
-        day: "14",
-        month: "02",
-        year: "2024",
-      },
-      {
-        id: 15,
-        albumCover: '/images/vinyl-icon.svg',
-        title: 'Song 15',
-        artist: 'Artist 3',
-        album: 'Album 3',
-        genre: 'Genre 3',
-        hour: "12",
-        minute: "30",
-        day: "15",
-        month: "01",
-        year: "2025",
-      },
-      {
-        id: 16,
-        albumCover: '/images/vinyl-icon.svg',
-        title: 'Song 16',
-        artist: 'Artist 4',
-        album: 'Album 4',
-        genre: 'Genre 4',
-        hour: "12",
-        minute: "30",
-        day: "16",
-        month: "01",
-        year: "2025",
-      },
-      {
-        id: 17,
-        albumCover: '/images/vinyl-icon.svg',
-        title: 'Song 17',
-        artist: 'Artist 4',
-        album: 'Album 4',
-        genre: 'Genre 4',
-        hour: "12",
-        minute: "30",
-        day: "17",
-        month: "01",
-        year: "2025",
-      },
-      {
-        id: 18,
-        albumCover: '/images/vinyl-icon.svg',
-        title: 'Song 18',
-        artist: 'Artist 4',
-        album: 'Album 4',
-        genre: 'Genre 4',
-        hour: "12",
-        minute: "30",
-        day: "18",
-        month: "01",
-        year: "2025",
-      },
-      {
-        id: 19,
-        albumCover: '/images/vinyl-icon.svg',
-        title: 'Song 19',
-        artist: 'Artist 4',
-        album: 'Album 4',
-        genre: 'Genre 4',
-        hour: "12",
-        minute: "30",
-        day: "19",
-        month: "01",
-        year: "2025",
-      },
-      {
-        id: 20,
-        albumCover: '/images/vinyl-icon.svg',
-        title: 'Song 20',
-        artist: 'Artist 4',
-        album: 'Album 4',
-        genre: 'Genre 4',
-        hour: "12",
-        minute: "30",
-        day: "20",
-        month: "01",
-        year: "2025",
-      },
-      {
-        id: 21,
-        albumCover: '/images/vinyl-icon.svg',
-        title: 'Song 21',
-        artist: 'Artist 5',
-        album: 'Album 5',
-        genre: 'Genre 5',
-        hour: "12",
-        minute: "30",
-        day: "21",
-        month: "01",
-        year: "2025",
-      },
-      {
-        id: 22,
-        albumCover: '/images/vinyl-icon.svg',
-        title: 'Song 22',
-        artist: 'Artist 5',
-        album: 'Album 5',
-        genre: 'Genre 5',
-        hour: "12",
-        minute: "30",
-        day: "22",
-        month: "01",
-        year: "2025",
-      },
-      {
-        id: 23,
-        albumCover: '/images/vinyl-icon.svg',
-        title: 'Song 23',
-        artist: 'Artist 5',
-        album: 'Album 5',
-        genre: 'Genre 5',
-        hour: "12",
-        minute: "30",
-        day: "23",
-        month: "01",
-        year: "2025",
-      },
-      {
-        id: 24,
-        albumCover: '/images/vinyl-icon.svg',
-        title: 'Song 24',
-        artist: 'Artist 5',
-        album: 'Album 5',
-        genre: 'Genre 5',
-        hour: "12",
-        minute: "30",
-        day: "24",
-        month: "01",
-        year: "2025",
-      },
-      {
-        id: 25,
-        albumCover: '/images/vinyl-icon.svg',
-        title: 'Song 25',
-        artist: 'Artist 5',
-        album: 'Album 5',
-        genre: 'Genre 5',
-        hour: "12",
-        minute: "30",
-        day: "25",
-        month: "01",
-        year: "2025",
-      },
-    ]);
+    const [songs, setSongs] = useState<Song[]>([]);
 
     const [currentPage, setCurrentPage] = useState(1); 
     const [itemsPerPage, setItemsPerPage] = useState(25);
-    const [isAutoGenerating, setIsAutoGenerating] = useState(true); // State to track auto-generation
+    const [isAutoGenerating, setIsAutoGenerating] = useState(true); 
 
     useImperativeHandle(ref, () => ({
       openAddMenu: handleOpenAddMenu,
@@ -397,18 +63,21 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
     };
 
     useEffect(() => {
-      let interval: NodeJS.Timeout | null = null;
-
-      if (isAutoGenerating) {
-        interval = setInterval(() => {
-          setSongs((prevSongs) => sortSongs([...prevSongs, generateRandomSong()]));
-        }, 1000);
-      }
-
-      return () => {
-        if (interval) clearInterval(interval);
+      const fetchSongs = async () => {
+        try {
+          const response = await fetch("/api/songs");
+          if (!response.ok) {
+            throw new Error("Failed to fetch songs");
+          }
+          const data: Song[] = await response.json();
+          setSongs(data); 
+        } catch (error) {
+          console.error("Error fetching songs:", error);
+        }
       };
-    }, [isAutoGenerating]);
+    
+      fetchSongs();
+    }, []);
 
     const toggleAutoGeneration = () => {
       setIsAutoGenerating((prev) => !prev);
@@ -465,7 +134,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
       setIsAddMenuOpen(false);
     };
 
-    const handleAddSong = (e: React.FormEvent) => {
+    const handleAddSong = async (e: React.FormEvent) => {
       e.preventDefault();
 
       const validationResult = validateForm(formData);
@@ -484,10 +153,26 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
         month: padWithZero(formData.month),
       };
 
-      setSongs((prevSongs) => addSong(prevSongs, formattedSong));
-      setSuccessMessage("Track added successfully!");
-      setError(null);
-      handleCloseAddMenu();
+      try {
+        const response = await fetch("/api/songs", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formattedSong),
+        });
+    
+        if (!response.ok) {
+          throw new Error("Failed to add song");
+        }
+    
+        const newSong = await response.json();
+        setSongs((prevSongs) => [...prevSongs, newSong]); 
+        setSuccessMessage("Track added successfully!");
+        setError(null);
+        handleCloseAddMenu();
+      } catch (error) {
+        console.error("Error adding song:", error);
+        setError("Failed to add song");
+      }
     };
 
     const handleOpenUpdateMenu = (song: Song) => {
@@ -502,7 +187,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
       setIsUpdateMenuOpen(false);
     };
 
-    const handleUpdateSong = (id: number, updatedSong: Partial<Song>) => {
+    const handleUpdateSong = async (id: number, updatedSong: Partial<Song>) => {
       const validationResult = validateForm(updatedSong as Song);
 
       if (validationResult) {
@@ -518,32 +203,74 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
         month: padWithZero(updatedSong.month || ""),
       };
 
-      setSongs((prevSongs) => updateSong(prevSongs, id, formattedSong));
-      handleCloseUpdateMenu();
+      try {
+        const response = await fetch(`/api/songs/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formattedSong),
+        });
+    
+        if (!response.ok) {
+          throw new Error("Failed to update song");
+        }
+    
+        const updatedSongData = await response.json();
+        setSongs((prevSongs) =>
+          prevSongs.map((song) => (song.id === id ? updatedSongData : song))
+        );
+        handleCloseUpdateMenu();
+      } catch (error) {
+        console.error("Error updating song:", error);
+        setError("Failed to update song");
+      }
     };
 
-    const handleDeleteSong = (id: number) => {
-      setSongs((prevSongs) => deleteSong(prevSongs, id));
+    const handleDeleteSong = async (id: number) => {
+      try {
+        const response = await fetch(`/api/songs/${id}`, {
+          method: "DELETE",
+        });
+    
+        if (!response.ok) {
+          throw new Error("Failed to delete song");
+        }
+    
+        setSongs((prevSongs) => prevSongs.filter((song) => song.id !== id));
+      } catch (error) {
+        console.error("Error deleting song:", error);
+        setError("Failed to delete song");
+      }
     };
 
     const padWithZero = (value: string) => {
       return value.padStart(2, "0");
     };
 
-    const filteredSongs = useMemo(() => {
-      let result = songs;
+    useEffect(() => {
+      const fetchFilteredSongs = async () => {
+        try {
+          const queryParams = new URLSearchParams();
+          if (selectedYear) queryParams.append("filterBy", "year");
+          if (selectedMonth) queryParams.append("filterBy", "month");
+          if (selectedDay) queryParams.append("filterBy", "day");
     
-      if (filterByDate) {
-        result = result.filter(filterByDate);
-      }
+          const response = await fetch(`/api/songs?${queryParams.toString()}`);
+          if (!response.ok) {
+            throw new Error("Failed to fetch filtered songs");
+          }
     
-      result = result.filter((song) => filterSongs([song], selectedYear, selectedMonth, selectedDay).length > 0);
+          const data: Song[] = await response.json();
+          setSongs(data);
+        } catch (error) {
+          console.error("Error fetching filtered songs:", error);
+        }
+      };
     
-      return result;
-    }, [songs, filterByDate, selectedYear, selectedMonth, selectedDay]);
+      fetchFilteredSongs();
+    }, [selectedYear, selectedMonth, selectedDay]);
 
-    const totalPages = Math.ceil(filteredSongs.length / itemsPerPage);
-    const paginatedSongs = filteredSongs.slice(
+    const totalPages = Math.ceil(songs.length / itemsPerPage);
+    const paginatedSongs = songs.slice(
       (currentPage - 1) * itemsPerPage,
       currentPage * itemsPerPage
     );
@@ -597,14 +324,23 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
 
     const pageNumbers = generatePageNumbers();
 
-    const groupedData = useMemo(() => {
-      return groupSongsByDate(filteredSongs, selectedYear, selectedMonth);
-    }, [songs, selectedYear, selectedMonth]);
-
     useEffect(() => {
-      if (onGroupedData)
-        onGroupedData!(groupedData);
-    }, [groupedData, onGroupedData]);
+      const fetchGroupedData = async () => {
+        try {
+          const response = await fetch("/api/songs?groupByDate=true");
+          if (!response.ok) {
+            throw new Error("Failed to fetch grouped data");
+          }
+    
+          const groupedData = await response.json();
+          if (onGroupedData) onGroupedData(groupedData);
+        } catch (error) {
+          console.error("Error fetching grouped data:", error);
+        }
+      };
+    
+      fetchGroupedData();
+    }, []); 
     
     return (
       <div className="profile-songs-col">
@@ -637,7 +373,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
         </div>
 
         {paginatedSongs.map((song, index) => {
-          const hrColor = assignHrColor(index + (currentPage - 1) * itemsPerPage, filteredSongs.length);
+          const hrColor = assignHrColor(index + (currentPage - 1) * itemsPerPage, songs.length);
 
           return (
             <SongCard

@@ -7,7 +7,7 @@ import {
     assignHrColor,
     sortSongs,
     Song,
-  } from "../src/utils/crudUtils";
+  } from "../src/utils/songUtils";
   
   describe("crudUtils", () => {
     const mockSongs: Song[] = [
