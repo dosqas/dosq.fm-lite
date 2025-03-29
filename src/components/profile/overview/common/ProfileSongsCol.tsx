@@ -3,8 +3,7 @@ import { Song } from "@/types/song";
 import SongCard from "./SongCard";
 import UpdateTrackMenu from "./track-menu/UpdateTrackMenu";
 import AddTrackMenu from "./track-menu/AddTrackMenu";
-import { validateForm } from "../../../../utils/formUtils";
-import { assignHrColor } from "../../../../utils/songUtils";
+import { assignHrColor, validateForm } from "../../../../utils/songUtils";
 import "../../../../styles/profile/overview/common/profile-songs-col.css";
 
 export interface ProfileSongsColHandle {

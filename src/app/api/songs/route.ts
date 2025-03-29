@@ -1,18 +1,8 @@
 import { NextResponse } from "next/server";
 import { songs, updateSongs } from "@/data/songs"; 
 import { Song } from "@/types/song";
-import { sortSongs } from "@/utils/songUtils"; 
-
-// Helper function to validate song data
-const validateSong = (song: Song) => {
-  const requiredFields = ["title", "artist", "album", "genre", "year", "month", "day", "hour", "minute"];
-  for (const field of requiredFields) {
-    if (!song[field as keyof Song]) {
-      return `Field '${field}' is required.`;
-    }
-  }
-  return null;
-};
+import { sortSongs, validateForm } from "@/utils/songUtils"; 
+import { withCORS } from "@/utils/backendUtils";
 
 // Helper function to filter songs
 const filterSongs = (
@@ -74,19 +64,19 @@ export async function GET(request: Request) {
 
   if (groupByDate === "true") {
     const groupedData = groupSongsByDate(filteredSongs);
-    return NextResponse.json(groupedData);
+    return withCORS(NextResponse.json(groupedData, { status: 200 }));
   }
 
-  return NextResponse.json(filteredSongs);
+  return withCORS(NextResponse.json(filteredSongs, { status: 200 }));
 }
 
 // POST: Add a new song
 export async function POST(request: Request) {
   const newSong: Song = await request.json();
 
-  const validationError = validateSong(newSong);
+  const validationError = validateForm (newSong);
   if (validationError) {
-    return NextResponse.json({ error: validationError }, { status: 400 });
+    return withCORS(NextResponse.json({ error: validationError }, { status: 400 }));
   }
 
   newSong.id = Date.now();
@@ -94,5 +84,16 @@ export async function POST(request: Request) {
   const updatedSongs = sortSongs([...songs, newSong]);
   updateSongs(updatedSongs);
 
-  return NextResponse.json(newSong, { status: 201 }); 
+  return withCORS(NextResponse.json(newSong, { status: 201 })); 
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    },
+  });
 }
