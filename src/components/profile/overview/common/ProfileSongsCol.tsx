@@ -1,4 +1,5 @@
 import React, { useState, forwardRef, useImperativeHandle, useMemo, useEffect } from "react";
+import { Song } from "@/types/song";
 import SongCard from "./SongCard";
 import UpdateTrackMenu from "./track-menu/UpdateTrackMenu";
 import AddTrackMenu from "./track-menu/AddTrackMenu";
@@ -13,20 +14,6 @@ import {
   sortSongs,
 } from "../../../../utils/crudUtils";
 import "../../../../styles/profile/overview/common/profile-songs-col.css";
-
-interface Song {
-  id: number;
-  albumCover: string;
-  title: string;
-  artist: string;
-  album: string;
-  genre: string;
-  hour: string;
-  minute: string;
-  day: string;
-  month: string;
-  year: string;
-}
 
 export interface ProfileSongsColHandle {
   openAddMenu: () => void;
@@ -373,7 +360,8 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
     ]);
 
     const [currentPage, setCurrentPage] = useState(1); 
-    const itemsPerPage = 25;
+    const [itemsPerPage, setItemsPerPage] = useState(25);
+    const [isAutoGenerating, setIsAutoGenerating] = useState(true); // State to track auto-generation
 
     useImperativeHandle(ref, () => ({
       openAddMenu: handleOpenAddMenu,
@@ -409,19 +397,22 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
     };
 
     useEffect(() => {
-      const interval = setInterval(() => {
-        setSongs((prevSongs) => sortSongs([...prevSongs, generateRandomSong()]));
-      }, 1000);
-    
-      const timeout = setTimeout(() => {
-        clearInterval(interval); 
-      }, 60000); 
-    
+      let interval: NodeJS.Timeout | null = null;
+
+      if (isAutoGenerating) {
+        interval = setInterval(() => {
+          setSongs((prevSongs) => sortSongs([...prevSongs, generateRandomSong()]));
+        }, 1000);
+      }
+
       return () => {
-        clearInterval(interval);
-        clearTimeout(timeout); 
+        if (interval) clearInterval(interval);
       };
-    }, []);
+    }, [isAutoGenerating]);
+
+    const toggleAutoGeneration = () => {
+      setIsAutoGenerating((prev) => !prev);
+    };
 
     const [selectedSong, setSelectedSong] = useState<Song | null>(null);
     const [isUpdateMenuOpen, setIsUpdateMenuOpen] = useState(false);
@@ -617,8 +608,36 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
     
     return (
       <div className="profile-songs-col">
+        <div className="profile-songs-col-header">
+          <div className="profile-songs-col-items-per-page">
+            <label className="profile-songs-col-items-per-page-label" htmlFor="items-per-page">
+              Items per page:
+            </label>
+            <select
+              className="profile-songs-col-items-per-page-select"
+              id="items-per-page"
+              value={itemsPerPage}
+              onChange={(e) => {
+                const value = parseInt(e.target.value, 10);
+                setCurrentPage(1); 
+                setItemsPerPage(value); 
+              }}
+            >
+              <option value="5">5</option>
+              <option value="10">10</option>
+              <option value="15">15</option>
+              <option value="20">20</option>
+              <option value="25">25</option>
+            </select>
+          </div>
+          
+          <button onClick={toggleAutoGeneration} className="toggle-auto-generation-button">
+            {isAutoGenerating ? "Stop Auto-Generation" : "Start Auto-Generation"}
+          </button>
+        </div>
+
         {paginatedSongs.map((song, index) => {
-          const hrColor = assignHrColor(index + (currentPage - 1) * 25, filteredSongs.length);
+          const hrColor = assignHrColor(index + (currentPage - 1) * itemsPerPage, filteredSongs.length);
 
           return (
             <SongCard
@@ -636,49 +655,43 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
           );
         })}
 
-        <div className="pagination-controls">
-          <div className="pagination-button-container" style={{ flex: "1 1 25%" }}>
-            {currentPage > 1 && (
-              <button
-                onClick={handlePreviousPage}
-                className="pagination-button"
-              >
-                Previous
-              </button>
-            )}
-          </div>
+      {itemsPerPage > 0 && totalPages > 0 && (
+      <div className="pagination-controls">
+        <div className="pagination-button-container" style={{ flex: "1 1 25%" }}>
+          {currentPage > 1 && (
+            <button onClick={handlePreviousPage} className="pagination-button">
+              Previous
+            </button>
+          )}
+        </div>
 
-          <div className="numbered-pagination" style={{ flex: "1 1 50%" }}>
-            {pageNumbers.map((page, index) =>
-              typeof page === "number" ? (
-                <button
-                  key={index}
-                  onClick={() => handlePageClick(page)}
-                  className={`pagination-button ${
-                    page === currentPage ? "active" : ""
-                  }`}
-                >
-                  {page}
-                </button>
-              ) : (
-                <span key={index} className="ellipsis">
-                  {page}
-                </span>
-              )
-            )}
-          </div>
-
-          <div className="pagination-button-container" style={{ flex: "1 1 25%" }}>
-            {currentPage < totalPages && (
+        <div className="numbered-pagination" style={{ flex: "1 1 50%" }}>
+          {pageNumbers.map((page, index) =>
+            typeof page === "number" ? (
               <button
-                onClick={handleNextPage}
-                className="pagination-button"
+                key={index}
+                onClick={() => handlePageClick(page)}
+                className={`pagination-button ${page === currentPage ? "active" : ""}`}
               >
-                Next
+                {page}
               </button>
+            ) : (
+              <span key={index} className="ellipsis">
+                {page}
+              </span>
+            )
+          )}
+        </div>
+
+        <div className="pagination-button-container" style={{ flex: "1 1 25%" }}>
+          {currentPage < totalPages && (
+            <button onClick={handleNextPage} className="pagination-button">
+              Next
+            </button>
             )}
           </div>
         </div>
+      )}
 
         {isAddMenuOpen && (
           <AddTrackMenu

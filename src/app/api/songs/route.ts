@@ -1,5 +1,18 @@
 import { NextResponse } from "next/server";
 
+let songs: Song[] = [];
+
+// Helper function to validate song data
+const validateSong = (song: Song) => {
+  const requiredFields = ["title", "artist", "album", "genre", "year", "month", "day", "hour", "minute"];
+  for (const field of requiredFields) {
+    if (!song[field as keyof Song]) {
+      return `Field '${field}' is required.`;
+    }
+  }
+  return null;
+};
+
 export async function GET() {
   const songs = [
     { id: 1, title: "Donuts (Outro)", album: "Donuts", artist: "J Dilla", genre: "Hip-Hop" },

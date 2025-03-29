@@ -9,6 +9,7 @@
     width: 70%;
     flex: 1;
     height: auto;
+    justify-content: center;
 }
 
 .pagination-controls {
@@ -53,3 +54,59 @@
     align-items: center;
     width: 100%;
 }
+
+.profile-songs-col-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    padding: 0.5rem; 
+    color: #ABA8A7;
+    font-size: 1.1rem;
+}
+
+.profile-songs-col-items-per-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    margin-left: -1.5rem;
+    color: #ABA8A7;
+    font-size: 1.1rem;
+    width: 30%;
+}
+
+.profile-songs-col-items-per-page-select {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    border: 1px solid #ABA8A7; 
+    background-color: #2e2e2e; 
+    color: #ABA8A7; 
+    width: 30%; 
+    padding: 0.3rem; 
+}
+
+.toggle-auto-generation-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30%;
+    padding: 0.5rem;
+    background-color: #B51811;
+    color: #FFFFFF;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .toggle-auto-generation-button:hover {
+    background-color: #D32F2F;
+  }
+  
+  .toggle-auto-generation-button:active {
+    background-color: #B51811;
+  }
+  
