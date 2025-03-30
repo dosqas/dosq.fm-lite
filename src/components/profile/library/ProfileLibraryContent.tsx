@@ -6,28 +6,11 @@ import ProfileSongsCol, { ProfileSongsColHandle } from "../overview/common/Profi
 import LibrarySidebar from "./ProfileLibrarySidebar";
 import "../../../styles/profile/library/profile-library-content.css";
 
-interface GroupedData {
-  [key: string]: number;
-}
-
 const ProfileLibraryContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"dosqs" | "artists" | "albums" | "tracks">("dosqs");
   const [selectedYear, setSelectedYear] = useState<string | null>(null);
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
-
-  const [groupedData, setGroupedData] = useState<GroupedData>({});
-  const [currentPage, setCurrentPage] = useState(1);
-
-  const handleGroupedData = (data: GroupedData) => {
-    setGroupedData(data);
-  };
-
-  const handlePageChange = (pageNumber: number) => {
-    setCurrentPage(pageNumber);
-  };
-
-  // Create a ref for ProfileSongsCol
   const songsColRef = useRef<ProfileSongsColHandle>(null);
 
   return (
@@ -40,32 +23,30 @@ const ProfileLibraryContent: React.FC = () => {
 
       <div className="profile-library-content-grid">
         <ProfileSongsCol
-          ref={songsColRef} 
+          ref={songsColRef}
           selectedYear={selectedYear}
           selectedMonth={selectedMonth}
           selectedDay={selectedDay}
-          onGroupedData={handleGroupedData} 
-          onPageChange={handlePageChange}
         />
         <LibrarySidebar
-          groupedData={groupedData}
           onYearSelect={(year) => {
             setSelectedYear(year);
-            handlePageChange(1);
+            setSelectedMonth(null);
+            setSelectedDay(null);
             songsColRef.current?.resetPage();
           }}
           onMonthSelect={(month) => {
             setSelectedMonth(month);
-            handlePageChange(1); 
+            setSelectedDay(null);
             songsColRef.current?.resetPage();
           }}
           onDaySelect={(day) => {
             setSelectedDay(day);
-            handlePageChange(1);
-            songsColRef.current?.resetPage(); 
+            songsColRef.current?.resetPage();
           }}
           selectedYear={selectedYear}
           selectedMonth={selectedMonth}
+          selectedDay={selectedDay}
         />
       </div>
     </div>

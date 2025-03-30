@@ -1,4 +1,6 @@
-import React, { useMemo, useRef } from "react";
+import React, { useMemo, useRef, useEffect, useState } from "react";
+import { groupSongs } from "../../../utils/songUtils"; 
+import { Song } from "@/types/song";
 import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -14,32 +16,86 @@ import "../../../styles/profile/library/profile-library-sidebar.css";
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 interface LibrarySidebarProps {
-  groupedData: { [key: string]: number }; 
   onYearSelect: (year: string | null) => void;
   onMonthSelect: (month: string | null) => void;
   onDaySelect: (day: string | null) => void;
   selectedYear: string | null;
   selectedMonth: string | null;
+  selectedDay: string | null;
 }
 
 const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
-  groupedData,
   onYearSelect,
   onMonthSelect,
   onDaySelect,
   selectedYear,
   selectedMonth,
+  selectedDay,
 }) => {
+  const [groupedData, setGroupedData] = useState<{ [key: string]: number }>({});
   const chartRef = useRef<any>(null);
 
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+  
+    const fetchGroupedData = async () => {
+      try {
+        const queryParams = new URLSearchParams();
+    
+        if (!selectedYear) {
+          queryParams.append("from", "1900-01-01");
+          queryParams.append("rangetype", "all");
+        } else if (!selectedMonth) {
+          queryParams.append("from", `${selectedYear}-01-01`);
+          queryParams.append("rangetype", "year");
+        } else {
+          queryParams.append("from", `${selectedYear}-${selectedMonth}-01`);
+          queryParams.append("rangetype", "1month");
+        }
+    
+        const response = await fetch(`/api/songs?${queryParams.toString()}`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch filtered songs");
+        }
+    
+        const data: Song[] = await response.json();
+    
+        const grouped = data.reduce((acc: { [key: string]: number }, song: Song) => {
+          let key = "";
+          if (!selectedYear) {
+            key = song.year;
+          } else if (!selectedMonth) {
+            key = song.month.padStart(2, "0"); 
+          } else {
+            key = song.day.padStart(2, "0"); 
+          }
+    
+          acc[key] = (acc[key] || 0) + 1;
+          return acc;
+        }, {});
+    
+        setGroupedData(grouped); 
+      } catch (error) {
+        console.error("Error fetching grouped data:", error);
+      }
+    };
+  
+    fetchGroupedData();
+    intervalId = setInterval(fetchGroupedData, 500); 
+  
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [selectedYear, selectedMonth, selectedDay]);
+
   const allMonths = useMemo(() => {
-    return Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, "0")); 
+    return Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, "0"));
   }, []);
 
   const allDaysInMonth = useMemo(() => {
     if (!selectedYear || !selectedMonth) return [];
-    const daysInMonth = new Date(parseInt(selectedYear), parseInt(selectedMonth), 0).getDate(); 
-    return Array.from({ length: daysInMonth }, (_, i) => (i + 1).toString().padStart(2, "0")); 
+    const daysInMonth = new Date(parseInt(selectedYear), parseInt(selectedMonth), 0).getDate();
+    return Array.from({ length: daysInMonth }, (_, i) => (i + 1).toString().padStart(2, "0"));
   }, [selectedYear, selectedMonth]);
 
   const chartData = useMemo(() => {
@@ -65,24 +121,13 @@ const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
         "Jan", "Feb", "Mar", "Apr", "May", "Jun",
         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
       ];
-    
-      console.log("Selected Year:", selectedYear);
-      console.log("Selected Month:", selectedMonth);
-    
+
       if (!selectedYear) {
-        console.log("Year Label:", key);
         return key;
       } else if (!selectedMonth) {
         const monthIndex = parseInt(key, 10) - 1;
-        if (monthIndex >= 0 && monthIndex < 12) {
-          console.log("Month Label:", `${monthNames[monthIndex]} ${selectedYear}`);
-          return `${monthNames[monthIndex]} ${selectedYear}`;
-        } else {
-          console.warn(`Invalid month key: ${key}`);
-          return key; 
-        }
+        return `${monthNames[monthIndex]} ${selectedYear}`;
       } else {
-        console.log("Day Label:", `${key} ${monthNames[parseInt(selectedMonth, 10) - 1]}`);
         return `${parseInt(key, 10)} ${monthNames[parseInt(selectedMonth, 10) - 1]}`;
       }
     });
@@ -105,8 +150,8 @@ const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
 
   const chartHeight = useMemo(() => {
     const numItems = selectedYear && !selectedMonth ? allMonths.length : allDaysInMonth.length;
-    const minHeight = 250; 
-    const heightPerItem = 17.5; 
+    const minHeight = 250;
+    const heightPerItem = 17.5;
     return Math.max(minHeight, numItems * heightPerItem);
   }, [allMonths, allDaysInMonth, selectedYear, selectedMonth]);
 
@@ -164,7 +209,7 @@ const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
 
   const handleBarClick = (event: any) => {
     if (!chartRef.current) return;
-  
+
     const chart = chartRef.current;
     const elements = chart.getElementsAtEventForMode(
       event,
@@ -172,27 +217,26 @@ const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
       { intersect: true },
       false
     );
-  
+
     if (elements.length > 0) {
       const index = elements[0].index;
       const label = chartData.labels[index];
-  
-      console.log("Clicked Label:", label);
-  
+
       if (!selectedYear) {
-        onYearSelect(label); 
+        onYearSelect(label);
       } else if (!selectedMonth) {
         const monthNames = [
           "Jan", "Feb", "Mar", "Apr", "May", "Jun",
           "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
         ];
         const [monthName] = label.split(" ");
-        const monthIndex = monthNames.indexOf(monthName) + 1; 
-        const numericMonth = monthIndex.toString().padStart(2, "0"); 
-        console.log("Parsed Month:", numericMonth);
-        onMonthSelect(numericMonth); 
+        const monthIndex = monthNames.indexOf(monthName) + 1;
+        const numericMonth = monthIndex.toString().padStart(2, "0");
+        onMonthSelect(numericMonth);
       } else {
-        onDaySelect(label);
+        const day = label.split(" ")[0]; 
+        const numericDay = day.padStart(2, "0"); 
+        onDaySelect(numericDay);
       }
     }
   };
@@ -209,7 +253,6 @@ const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
   return (
     <div className="library-sidebar">
       <h3>Date range</h3>
-
       <div className="chart-container" style={{ height: chartHeight }}>
         <Bar ref={chartRef} data={chartData} options={chartOptions} onClick={handleBarClick} />
       </div>

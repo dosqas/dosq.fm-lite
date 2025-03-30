@@ -3,16 +3,6 @@ import { songs, updateSongs } from "@/data/songs";
 import { withCORS } from "@/utils/backendUtils";
 import { sortSongs, validateForm } from "@/utils/songUtils";
 
-
-// GET: Fetch a single song by ID
-export async function GET(request: Request, { params }: { params: { id: string } }) {
-  const song = songs.find((s) => s.id === parseInt(params.id));
-  if (!song) {
-    return withCORS(NextResponse.json({ error: "Song not found" }, { status: 404 }));
-  }
-  return withCORS(NextResponse.json(song));
-}
-
 // PUT: Update a song by ID
 export async function PUT(request: Request, context: { params: { id: string } }) {
     const { id } = await context.params;
@@ -27,18 +17,23 @@ export async function PUT(request: Request, context: { params: { id: string } })
       return withCORS(NextResponse.json({ error: validationError }, { status: 400 }));
     }
   
-    songs[songIndex] = { ...songs[songIndex], ...updatedSong };
+    songs[songIndex] = {
+      ...songs[songIndex], 
+      ...updatedSong,
+    };
   
     const updatedSongs = sortSongs([...songs]);
     updateSongs(updatedSongs);
   
-    return withCORS(NextResponse.json(updatedSongs[songIndex], { status: 200 })); 
+    const updatedSongData = updatedSongs.find((song) => song.id === parseInt(id));
+    return withCORS(NextResponse.json(updatedSongData, { status: 200 }));
   }
 
 // DELETE: Delete a song by ID
 export async function DELETE(request: Request, context: { params: { id: string } }) {
     const { id } = await context.params;
-    const songIndex = songs.findIndex((s) => s.id === parseInt(id));
+    const songIndex = songs.findIndex((s) => s.id === parseInt(id, 10));
+    console.log("Song index:", id);
     if (songIndex === -1) {
       return withCORS(NextResponse.json({ error: "Song not found" }, { status: 404 }));
     }

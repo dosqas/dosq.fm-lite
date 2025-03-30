@@ -3,7 +3,7 @@ import { Song } from "@/types/song";
 import SongCard from "./SongCard";
 import UpdateTrackMenu from "./track-menu/UpdateTrackMenu";
 import AddTrackMenu from "./track-menu/AddTrackMenu";
-import { assignHrColor, validateForm } from "../../../../utils/songUtils";
+import { assignHrColor, validateForm, sortSongs, filterSongs } from "../../../../utils/songUtils";
 import "../../../../styles/profile/overview/common/profile-songs-col.css";
 
 export interface ProfileSongsColHandle {
@@ -12,21 +12,18 @@ export interface ProfileSongsColHandle {
 }
 
 interface ProfileSongsColProps {
-  filterByDate?: (song: Song) => boolean; 
   selectedYear?: string | null;
   selectedMonth?: string | null;
   selectedDay?: string | null;
-  onGroupedData?: (data: { [key: string]: number }) => void; 
-  onPageChange?: (page: number) => void;
 }
 
 const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
-  ({ filterByDate, selectedYear, selectedMonth, selectedDay, onGroupedData }, ref) => {
+  ({ selectedYear, selectedMonth, selectedDay }, ref) => {
     const [songs, setSongs] = useState<Song[]>([]);
 
     const [currentPage, setCurrentPage] = useState(1); 
     const [itemsPerPage, setItemsPerPage] = useState(25);
-    const [isAutoGenerating, setIsAutoGenerating] = useState(true); 
+    const [isAutoGenerating, setIsAutoGenerating] = useState(false); 
 
     useImperativeHandle(ref, () => ({
       openAddMenu: handleOpenAddMenu,
@@ -61,26 +58,85 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
       };
     };
 
-    useEffect(() => {
-      const fetchSongs = async () => {
-        try {
-          const response = await fetch("/api/songs");
-          if (!response.ok) {
-            throw new Error("Failed to fetch songs");
-          }
-          const data: Song[] = await response.json();
-          setSongs(data); 
-        } catch (error) {
-          console.error("Error fetching songs:", error);
-        }
-      };
+    const fetchFilteredSongs = async () => {
+      try {
+        const queryParams = new URLSearchParams();
     
-      fetchSongs();
-    }, []);
+        if (!selectedYear) {
+          queryParams.append("from", "1900-01-01");
+          queryParams.append("rangetype", "all");
+        } else if (!selectedMonth) {
+          queryParams.append("from", `${selectedYear}-01-01`);
+          queryParams.append("rangetype", "year");
+        } else if (!selectedDay) {
+          queryParams.append("from", `${selectedYear}-${selectedMonth}-01`);
+          queryParams.append("rangetype", "1month");
+        } else {
+          queryParams.append(
+            "from",
+            `${selectedYear}-${selectedMonth.padStart(2, "0")}-${selectedDay.padStart(2, "0")}`
+          );
+          queryParams.append("rangetype", "1day");
+        }
+
+        console.log("Fetching songs with query:", queryParams.toString());
+    
+        const response = await fetch(`/api/songs?${queryParams.toString()}`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch filtered songs");
+        }
+    
+        const data: Song[] = await response.json();
+        setSongs(data);
+      } catch (error) {
+        console.error("Error fetching filtered songs:", error);
+      }
+    };
+
+    useEffect(() => {
+      fetchFilteredSongs();
+    }, [selectedYear, selectedMonth, selectedDay]);
 
     const toggleAutoGeneration = () => {
       setIsAutoGenerating((prev) => !prev);
     };
+
+    useEffect(() => {
+      let interval: NodeJS.Timeout | null = null;
+    
+      if (isAutoGenerating) {
+        interval = setInterval(async () => {
+          const newSong = generateRandomSong();
+    
+          try {
+            const response = await fetch("/api/songs", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(newSong),
+            });
+    
+            if (!response.ok) {
+              throw new Error("Failed to add song to the backend");
+            }
+    
+            const addedSong = await response.json();
+    
+            fetchFilteredSongs();
+
+          } catch (error) {
+            console.error("Error adding song:", error);
+          }
+        }, 1500);
+      }
+    
+      return () => {
+        if (interval) {
+          clearInterval(interval); 
+        }
+      };
+    }, [isAutoGenerating]);
 
     const [selectedSong, setSelectedSong] = useState<Song | null>(null);
     const [isUpdateMenuOpen, setIsUpdateMenuOpen] = useState(false);
@@ -164,7 +220,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
         }
     
         const newSong = await response.json();
-        setSongs((prevSongs) => [...prevSongs, newSong]); 
+        fetchFilteredSongs();
         setSuccessMessage("Track added successfully!");
         setError(null);
         handleCloseAddMenu();
@@ -214,9 +270,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
         }
     
         const updatedSongData = await response.json();
-        setSongs((prevSongs) =>
-          prevSongs.map((song) => (song.id === id ? updatedSongData : song))
-        );
+        fetchFilteredSongs();        
         handleCloseUpdateMenu();
       } catch (error) {
         console.error("Error updating song:", error);
@@ -234,7 +288,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
           throw new Error("Failed to delete song");
         }
     
-        setSongs((prevSongs) => prevSongs.filter((song) => song.id !== id));
+        fetchFilteredSongs();
       } catch (error) {
         console.error("Error deleting song:", error);
         setError("Failed to delete song");
@@ -244,29 +298,6 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
     const padWithZero = (value: string) => {
       return value.padStart(2, "0");
     };
-
-    useEffect(() => {
-      const fetchFilteredSongs = async () => {
-        try {
-          const queryParams = new URLSearchParams();
-          if (selectedYear) queryParams.append("filterBy", "year");
-          if (selectedMonth) queryParams.append("filterBy", "month");
-          if (selectedDay) queryParams.append("filterBy", "day");
-    
-          const response = await fetch(`/api/songs?${queryParams.toString()}`);
-          if (!response.ok) {
-            throw new Error("Failed to fetch filtered songs");
-          }
-    
-          const data: Song[] = await response.json();
-          setSongs(data);
-        } catch (error) {
-          console.error("Error fetching filtered songs:", error);
-        }
-      };
-    
-      fetchFilteredSongs();
-    }, [selectedYear, selectedMonth, selectedDay]);
 
     const totalPages = Math.ceil(songs.length / itemsPerPage);
     const paginatedSongs = songs.slice(
@@ -322,24 +353,6 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
     };
 
     const pageNumbers = generatePageNumbers();
-
-    useEffect(() => {
-      const fetchGroupedData = async () => {
-        try {
-          const response = await fetch("/api/songs?groupByDate=true");
-          if (!response.ok) {
-            throw new Error("Failed to fetch grouped data");
-          }
-    
-          const groupedData = await response.json();
-          if (onGroupedData) onGroupedData(groupedData);
-        } catch (error) {
-          console.error("Error fetching grouped data:", error);
-        }
-      };
-    
-      fetchGroupedData();
-    }, []); 
     
     return (
       <div className="profile-songs-col">
