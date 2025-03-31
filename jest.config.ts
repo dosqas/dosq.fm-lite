@@ -1,17 +1,17 @@
+import { pathsToModuleNameMapper } from "ts-jest";
+import { compilerOptions } from "./tsconfig.json";
+
 module.exports = {
   preset: "ts-jest",
-  testEnvironment: "jsdom", // Use jsdom for React components
+  testEnvironment: "node",
+  setupFiles: ["<rootDir>/jest.setup.js"], 
   moduleDirectories: ["node_modules", "src"],
   transform: {
-    "^.+\\.tsx?$": "ts-jest",
-  },
-  globals: {
-    "ts-jest": {
-      tsconfig: "tsconfig.jest.json",
-    },
+    "^.+\\.tsx?$": ["ts-jest", { tsconfig: "tsconfig.jest.json" }], 
   },
   moduleNameMapper: {
-    "\\.(css|less|scss|sass)$": "identity-obj-proxy", // Mock CSS files
-    "\\.(jpg|jpeg|png|gif|webp|svg)$": "<rootDir>/__mocks__/fileMock.js", // Mock image files
+    ...pathsToModuleNameMapper(compilerOptions.paths, { prefix: "<rootDir>/" }),
+    "\\.(css|less|scss|sass)$": "identity-obj-proxy",
+    "\\.(jpg|jpeg|png|gif|webp|svg)$": "<rootDir>/__mocks__/fileMock.js",
   },
 };

@@ -33,7 +33,6 @@ export async function PUT(request: Request, context: { params: { id: string } })
 export async function DELETE(request: Request, context: { params: { id: string } }) {
     const { id } = await context.params;
     const songIndex = songs.findIndex((s) => s.id === parseInt(id, 10));
-    console.log("Song index:", id);
     if (songIndex === -1) {
       return withCORS(NextResponse.json({ error: "Song not found" }, { status: 404 }));
     }
