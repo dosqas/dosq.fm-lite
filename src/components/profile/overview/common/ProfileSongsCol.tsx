@@ -260,7 +260,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
 
       try {
         const response = await fetch(`/api/songs/${id}`, {
-          method: "PUT",
+          method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formattedSong),
         });
