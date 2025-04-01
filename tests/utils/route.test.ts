@@ -1,4 +1,4 @@
-import { sortSongs, filterSongs } from "../../src/utils/songUtils";
+import { sortSongs, filterSongs, assignHrColor, groupSongs } from "../../src/utils/songUtils";
 import { Song } from "../../src/types/song";
 
 describe("Utils: songUtils", () => {
@@ -35,8 +35,8 @@ describe("Utils: songUtils", () => {
 
       const sortedSongs = sortSongs(songs);
 
-      expect(sortedSongs[0].id).toBe(2); // Newer song should come first
-      expect(sortedSongs[1].id).toBe(1); // Older song should come last
+      expect(sortedSongs[0].id).toBe(2); 
+      expect(sortedSongs[1].id).toBe(1); 
     });
   });
 
@@ -93,6 +93,74 @@ describe("Utils: songUtils", () => {
     test("should return no songs if no match is found", () => {
       const filteredSongs = filterSongs(songs, "2020-01-01", "year");
       expect(filteredSongs).toEqual([]);
+    });
+  });
+
+  describe("assignHrColor", () => {
+    test("should return 'green' for top third", () => {
+      expect(assignHrColor(0, 9)).toBe("green");
+      expect(assignHrColor(2, 9)).toBe("green");
+    });
+
+    test("should return 'orange' for middle third", () => {
+      expect(assignHrColor(3, 9)).toBe("orange");
+      expect(assignHrColor(5, 9)).toBe("orange");
+    });
+
+    test("should return 'red' for bottom third", () => {
+      expect(assignHrColor(6, 9)).toBe("red");
+      expect(assignHrColor(8, 9)).toBe("red");
+    });
+  });
+
+  describe("groupSongs", () => {
+    const songs: Song[] = [
+      {
+        id: 1,
+        albumCover: "/images/vinyl-icon.svg",
+        title: "Song 1",
+        artist: "Artist 1",
+        album: "Album 1",
+        genre: "Genre 1",
+        hour: "12",
+        minute: "30",
+        day: "01",
+        month: "01",
+        year: "2023",
+      },
+      {
+        id: 2,
+        albumCover: "/images/vinyl-icon.svg",
+        title: "Song 2",
+        artist: "Artist 2",
+        album: "Album 2",
+        genre: "Genre 2",
+        hour: "14",
+        minute: "15",
+        day: "02",
+        month: "01",
+        year: "2023",
+      },
+    ];
+
+    test("should group songs by year", () => {
+      const grouped = groupSongs(songs, "all");
+      expect(grouped).toEqual({ "2023": 2 });
+    });
+
+    test("should group songs by month", () => {
+      const grouped = groupSongs(songs, "year");
+      expect(grouped).toEqual({ "01": 2 });
+    });
+
+    test("should group songs by day", () => {
+      const grouped = groupSongs(songs, "1month");
+      expect(grouped).toEqual({ "01": 1, "02": 1 });
+    });
+
+    test("should group songs by hour", () => {
+      const grouped = groupSongs(songs, "1day");
+      expect(grouped).toEqual({ "12:30": 1, "14:15": 1 });
     });
   });
 });
