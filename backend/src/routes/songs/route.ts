@@ -32,6 +32,8 @@ router.post("/", async (req: Request, res: Response) => {
       return res.status(400).json({ error: validationError });
     }
 
+    newSong.id = Date.now();
+
     const updatedSongs = sortSongs([...songs, newSong]);
     updateSongs(updatedSongs);
 

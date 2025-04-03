@@ -140,7 +140,7 @@
 /* Menu Overlay */
 .song-card-menu-overlay {
     position: absolute;
-    right: 10; 
+    right: 0.75rem; 
     border: 1px solid #ABA8A7;
     padding: 0.5rem;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);

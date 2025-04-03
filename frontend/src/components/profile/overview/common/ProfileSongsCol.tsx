@@ -25,6 +25,30 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
     const [currentPage, setCurrentPage] = useState(1); 
     const [itemsPerPage, setItemsPerPage] = useState(25);
     const [isAutoGenerating, setIsAutoGenerating] = useState(false); 
+    const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+
+    const handleMenuToggle = (songId: number) => {
+      setOpenMenuId((prevId) => (prevId === songId ? null : songId)); // Toggle the menu
+    };
+
+    const handleMenuClose = () => {
+      setOpenMenuId(null); // Close all menus
+    };
+
+    const SERVER_IP = process.env.REACT_APP_SERVER_IP;
+
+    const checkServerStatus = async () => {
+      try {
+        const response = await fetch(`${SERVER_IP}/health-check`);
+        if (response.ok) {
+          console.log("Server is reachable");
+        } else {
+          console.log("Server is down");
+        }
+      } catch (error) {
+        console.error("Error reaching server:", error);
+      }
+    };
 
     useImperativeHandle(ref, () => ({
       openAddMenu: handleOpenAddMenu,
@@ -202,7 +226,6 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
 
       const formattedSong = {
         ...formData,
-        id: Date.now(),
         hour: padWithZero(formData.hour),
         minute: padWithZero(formData.minute),
         day: padWithZero(formData.day),
@@ -400,6 +423,9 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
               onUpdate={() => handleOpenUpdateMenu(song)}
               onDelete={() => handleDeleteSong(song.id)}
               hrColor={hrColor}
+              isMenuOpen={openMenuId === song.id}
+              onMenuToggle={() => handleMenuToggle(song.id)} 
+              onMenuClose={handleMenuClose} 
             />
           );
         })}

@@ -12,6 +12,9 @@ interface SongCardProps {
   onUpdate: () => void; 
   onDelete: () => void; 
   hrColor?: string;
+  isMenuOpen: boolean; // Whether the menu is open
+  onMenuToggle: () => void; // Function to toggle the menu
+  onMenuClose: () => void; // Function to close the menu
 }
 
 const SongCard: React.FC<SongCardProps> = ({
@@ -24,12 +27,10 @@ const SongCard: React.FC<SongCardProps> = ({
   onUpdate,
   onDelete,
   hrColor,
+  isMenuOpen, // Whether the menu is open
+  onMenuToggle, // Function to toggle the menu
+  onMenuClose, // Function to close the menu
 }) => {
-  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-
-  const toggleMenu = () => {
-    setIsMenuOpen((prev) => !prev);
-  };
 
   return (
     <div className="song-card" style = {{ color: `${hrColor || "transparent"}`}} data-testid="song-card">
@@ -49,7 +50,7 @@ const SongCard: React.FC<SongCardProps> = ({
           <span className="song-card-dateListened">{dateListened}</span>
           <button
             className="song-card-kebab-menu"
-            onClick={toggleMenu}
+            onClick={onMenuToggle}
             aria-label="Options"
           >
             &#x22EE;
@@ -62,7 +63,7 @@ const SongCard: React.FC<SongCardProps> = ({
             className="song-card-menu-button"
             onClick={() => {
               onUpdate(); 
-              setIsMenuOpen(false); 
+              onMenuClose(); 
             }}
           >
             Modify
@@ -71,7 +72,7 @@ const SongCard: React.FC<SongCardProps> = ({
             className="song-card-menu-button"
             onClick={() => {
               onDelete(); 
-              setIsMenuOpen(false);
+              onMenuClose();
             }}
           >
             Delete
