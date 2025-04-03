@@ -3,7 +3,8 @@ import { Song } from "@/types/song";
 import SongCard from "./SongCard";
 import UpdateTrackMenu from "./track-menu/UpdateTrackMenu";
 import AddTrackMenu from "./track-menu/AddTrackMenu";
-import { assignHrColor, validateForm, sortSongs, filterSongs } from "../../../../utils/songUtils";
+import { assignHrColor } from "../../../../utils/songcardUtils";
+import { validateForm } from "@shared/utils/validation";
 import "../../../../styles/profile/overview/common/profile-songs-col.css";
 
 export interface ProfileSongsColHandle {
@@ -81,7 +82,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
 
         console.log("Fetching songs with query:", queryParams.toString());
     
-        const response = await fetch(`/api/songs?${queryParams.toString()}`);
+        const response = await fetch(`http://localhost:5000/api/songs?${queryParams.toString()}`);
         if (!response.ok) {
           throw new Error("Failed to fetch filtered songs");
         }
@@ -109,7 +110,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
           const newSong = generateRandomSong();
     
           try {
-            const response = await fetch("/api/songs", {
+            const response = await fetch("http://localhost:5000/api/songs", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -209,7 +210,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
       };
 
       try {
-        const response = await fetch("/api/songs", {
+        const response = await fetch("http://localhost:5000/api/songs", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formattedSong),
@@ -259,7 +260,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
       };
 
       try {
-        const response = await fetch(`/api/songs/${id}`, {
+        const response = await fetch(`http://localhost:5000/api/songs/${id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formattedSong),
@@ -280,7 +281,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
 
     const handleDeleteSong = async (id: number) => {
       try {
-        const response = await fetch(`/api/songs/${id}`, {
+        const response = await fetch(`http://localhost:5000/api/songs/${id}`, {
           method: "DELETE",
         });
     

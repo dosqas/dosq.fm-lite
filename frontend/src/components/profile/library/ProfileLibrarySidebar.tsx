@@ -1,5 +1,4 @@
 import React, { useMemo, useRef, useEffect, useState } from "react";
-import { groupSongs } from "../../../utils/songUtils"; 
 import { Song } from "@/types/song";
 import { Bar } from "react-chartjs-2";
 import {
@@ -53,7 +52,7 @@ const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
           queryParams.append("rangetype", "1month");
         }
     
-        const response = await fetch(`/api/songs?${queryParams.toString()}`);
+        const response = await fetch(`http://localhost:5000/api/songs?${queryParams.toString()}`);
         if (!response.ok) {
           throw new Error("Failed to fetch filtered songs");
         }

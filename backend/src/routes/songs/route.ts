@@ -1,7 +1,8 @@
 import express, { Request, Response } from "express";
 import { songs, updateSongs } from "../../data/songs";
 import { Song } from "../../types/song";
-import { sortSongs, validateForm, filterSongs } from "../../utils/songUtils";
+import { sortSongs, filterSongs } from "../../utils/songUtils";
+import { validateForm } from "../../../../shared/utils/validation";
 
 // Create the router using express.Router()
 const router = express.Router();
@@ -14,8 +15,8 @@ router.get("/", (req: Request, res: Response) => {
   };
 
   try {
-    const groupedData = filterSongs(songs, from, rangetype);
-    res.status(200).json(groupedData);
+    const filteredSongs = sortSongs(filterSongs(songs, from, rangetype));
+    res.status(200).json(filteredSongs);
   } catch (error) {
     console.error("Error fetching songs:", error);
     res.status(500).json({ error: "Internal Server Error" });

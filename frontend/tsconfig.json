@@ -19,8 +19,10 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
-    }
+      "@/*": ["./src/*"], // Existing alias for frontend files
+      "@shared/*": ["../shared/*"] // New alias for shared folder
+    },
+    "baseUrl": "." // Base directory for resolving paths
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "jest.setup.js"],
   "exclude": ["node_modules"]

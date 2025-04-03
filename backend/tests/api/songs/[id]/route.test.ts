@@ -3,7 +3,9 @@ import "jest";
 import express from "express";
 import songRouter from "../../../../src/routes/songs/[id]/route";
 import { songs, updateSongs } from "../../../../src/data/songs";
-import { validateForm, sortSongs } from "../../../../src/utils/songUtils";
+import { sortSongs } from "../../../../src/utils/songUtils";
+
+import { validateForm } from "../../../../../shared/utils/validation";
 
 jest.mock("../../../../src/data/songs", () => ({
   songs: [
