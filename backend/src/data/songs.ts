@@ -1,4 +1,4 @@
-import { Song } from "../types/song";
+import { Song } from "@shared/types/song";
 
 // In-memory storage for songs
 export let songs: Song[] = [

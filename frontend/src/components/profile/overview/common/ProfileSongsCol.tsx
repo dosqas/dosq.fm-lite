@@ -1,5 +1,5 @@
 import React, { useState, forwardRef, useImperativeHandle, useMemo, useEffect } from "react";
-import { Song } from "@/types/song";
+import { Song } from "@shared/types/song";
 import SongCard from "./SongCard";
 import UpdateTrackMenu from "./track-menu/UpdateTrackMenu";
 import AddTrackMenu from "./track-menu/AddTrackMenu";

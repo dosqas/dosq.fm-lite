@@ -1,10 +1,9 @@
 import express, { Request, Response } from "express";
 import { songs, updateSongs } from "../../data/songs";
-import { Song } from "../../types/song";
+import { Song } from "@shared/types/song";
 import { sortSongs, filterSongs } from "../../utils/songUtils";
 import { validateForm } from "../../../../shared/utils/validation";
 
-// Create the router using express.Router()
 const router = express.Router();
 
 // GET: Fetch all songs

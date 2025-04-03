@@ -9,7 +9,10 @@
     "skipLibCheck": true, // Skip type checking of declaration files
     "resolveJsonModule": true, // Allow importing JSON files
     "moduleResolution": "node", // Use Node.js module resolution
-    "types": ["node", "jest"] // Include Node.js and Jest types
+    "types": ["node", "jest"], // Include Node.js and Jest types
+    "paths": {
+      "@shared/*": ["../shared/*"] // New alias for shared folder
+    },
   },
   "include": ["src/**/*.ts", "tests/**/*.ts", "jest.setup.js"], // Include source and test files
   "exclude": ["node_modules", "dist"] // Exclude node_modules and output directory
