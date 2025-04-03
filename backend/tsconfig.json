@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "ES6", // Target ECMAScript 6
+    "module": "CommonJS", // Use CommonJS for Node.js compatibility
+    "rootDir": ".", // Root directory for source and test files
+    "outDir": "dist", // Output directory for compiled files
+    "strict": true, // Enable strict type-checking
+    "esModuleInterop": true, // Allow default imports from CommonJS modules
+    "skipLibCheck": true, // Skip type checking of declaration files
+    "resolveJsonModule": true, // Allow importing JSON files
+    "moduleResolution": "node", // Use Node.js module resolution
+    "types": ["node", "jest"] // Include Node.js and Jest types
+  },
+  "include": ["src/**/*.ts", "tests/**/*.ts", "jest.setup.js"], // Include source and test files
+  "exclude": ["node_modules", "dist"] // Exclude node_modules and output directory
+}

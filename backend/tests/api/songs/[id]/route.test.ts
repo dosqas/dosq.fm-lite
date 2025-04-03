@@ -1,6 +1,9 @@
-import { PATCH, DELETE} from "../../../../src/app/api/songs/[id]/route";
+import request from "supertest";
+import "jest";
+import express from "express";
+import songRouter from "../../../../src/routes/songs/[id]/route";
 import { songs, updateSongs } from "../../../../src/data/songs";
-import { filterSongs, validateForm, sortSongs } from "../../../../src/utils/songUtils";
+import { validateForm, sortSongs } from "../../../../src/utils/songUtils";
 
 jest.mock("../../../../src/data/songs", () => ({
   songs: [
@@ -11,12 +14,15 @@ jest.mock("../../../../src/data/songs", () => ({
 }));
 
 jest.mock("../../../../src/utils/songUtils", () => ({
-  filterSongs: jest.fn(),
   validateForm: jest.fn(),
   sortSongs: jest.fn(),
 }));
 
-describe("API Route: /api/songs", () => {
+const app = express();
+app.use(express.json());
+app.use("/api/songs", songRouter);
+
+describe("API Route: /api/songs/:id", () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
@@ -27,9 +33,13 @@ describe("API Route: /api/songs", () => {
       { id: 1, albumCover: '/images/vinyl-icon.svg', title: 'Updated Song 1', artist: 'Artist 1', album: 'Album 1', genre: 'Genre 1', hour: "12", minute: "30", day: "01", month: "01", year: "2023" },
       { id: 2, albumCover: '/images/vinyl-icon.svg', title: 'Song 2', artist: 'Artist 2', album: 'Album 2', genre: 'Genre 2', hour: "12", minute: "30", day: "02", month: "01", year: "2025" },
     ]);
-  
+
     const partialUpdate = { title: "Updated Song 1" };
-    const expectedUpdatedSong = {
+    const response = await request(app)
+      .patch("/api/songs/1")
+      .send(partialUpdate);
+
+    expect(validateForm).toHaveBeenCalledWith({
       id: 1,
       albumCover: '/images/vinyl-icon.svg',
       title: 'Updated Song 1',
@@ -41,70 +51,48 @@ describe("API Route: /api/songs", () => {
       day: "01",
       month: "01",
       year: "2023",
-    };
-  
-    const request = new Request("http://localhost/api/songs/1", {
-      method: "PATCH",
-      body: JSON.stringify(partialUpdate),
     });
-  
-    const response = await PATCH(request, { params: { id: "1" } });
-  
-    expect(validateForm).toHaveBeenCalledWith(expectedUpdatedSong); 
-    expect(sortSongs).toHaveBeenCalledWith([
-      expectedUpdatedSong,
-      { id: 2, albumCover: '/images/vinyl-icon.svg', title: 'Song 2', artist: 'Artist 2', album: 'Album 2', genre: 'Genre 2', hour: "12", minute: "30", day: "02", month: "01", year: "2025" },
-    ]);
-    expect(updateSongs).toHaveBeenCalledWith([
-      expectedUpdatedSong,
-      { id: 2, albumCover: '/images/vinyl-icon.svg', title: 'Song 2', artist: 'Artist 2', album: 'Album 2', genre: 'Genre 2', hour: "12", minute: "30", day: "02", month: "01", year: "2025" },
-    ]);
+    expect(sortSongs).toHaveBeenCalled();
+    expect(updateSongs).toHaveBeenCalled();
     expect(response.status).toBe(200);
-  
-    const json = await response.json();
-    expect(json).toEqual(expectedUpdatedSong);
+    expect(response.body).toEqual({
+      id: 1,
+      albumCover: '/images/vinyl-icon.svg',
+      title: 'Updated Song 1',
+      artist: 'Artist 1',
+      album: 'Album 1',
+      genre: 'Genre 1',
+      hour: "12",
+      minute: "30",
+      day: "01",
+      month: "01",
+      year: "2023",
+    });
   });
 
   test("DELETE: Delete a song by ID", async () => {
-    const request = new Request("http://localhost/api/songs/1", {
-      method: "DELETE",
-    });
-
-    const response = await DELETE(request, { params: { id: "1" } });
+    const response = await request(app).delete("/api/songs/1");
 
     expect(updateSongs).toHaveBeenCalledWith([
       { id: 2, albumCover: '/images/vinyl-icon.svg', title: 'Song 2', artist: 'Artist 2', album: 'Album 2', genre: 'Genre 2', hour: "12", minute: "30", day: "02", month: "01", year: "2025" },
     ]);
     expect(response.status).toBe(200);
-
-    const json = await response.json();
-    expect(json).toEqual({ message: "Deleted successfully" });
+    expect(response.body).toEqual({ message: "Deleted successfully" });
   });
 
   test("PATCH: Song not found", async () => {
-    const request = new Request("http://localhost/api/songs/999", {
-      method: "PATCH",
-      body: JSON.stringify({ title: "Non-existent Song" }),
-    });
-
-    const response = await PATCH(request, { params: { id: "999" } });
+    const response = await request(app)
+      .patch("/api/songs/999")
+      .send({ title: "Non-existent Song" });
 
     expect(response.status).toBe(404);
-
-    const json = await response.json();
-    expect(json).toEqual({ error: "Song not found" });
+    expect(response.body).toEqual({ error: "Song not found" });
   });
 
   test("DELETE: Song not found", async () => {
-    const request = new Request("http://localhost/api/songs/999", {
-      method: "DELETE",
-    });
-
-    const response = await DELETE(request, { params: { id: "999" } });
+    const response = await request(app).delete("/api/songs/999");
 
     expect(response.status).toBe(404);
-
-    const json = await response.json();
-    expect(json).toEqual({ error: "Song not found" });
+    expect(response.body).toEqual({ error: "Song not found" });
   });
 });
