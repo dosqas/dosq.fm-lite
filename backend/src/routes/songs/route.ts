@@ -3,8 +3,33 @@ import { songs, updateSongs } from "../../data/songs";
 import { Song } from "@shared/types/song";
 import { sortSongs, filterSongs } from "../../utils/songUtils";
 import { validateForm } from "../../../../shared/utils/validation";
+import { startAutoGeneration, stopAutoGeneration } from "./websocket";
 
 const router = express.Router();
+
+// POST: Start auto-generation of songs
+// This endpoint is used to trigger the auto-generation of songs
+router.post("/start-auto-generation", (req: Request, res: Response) => {
+  try {
+    startAutoGeneration(); // Trigger the auto-generation logic
+    res.status(200).json({ message: "Auto-generation started" });
+  } catch (error) {
+    console.error("Error starting auto-generation:", error);
+    res.status(500).json({ error: "Failed to start auto-generation" });
+  }
+});
+
+// POST: Stop auto-generation of songs
+// This endpoint is used to stop the auto-generation of songs
+router.post("/stop-auto-generation", (req: Request, res: Response) => {
+  try {
+    stopAutoGeneration(); // Stop the auto-generation logic
+    res.status(200).json({ message: "Auto-generation started" });
+  } catch (error) {
+    console.error("Error starting auto-generation:", error);
+    res.status(500).json({ error: "Failed to start auto-generation" });
+  }
+});
 
 // GET: Fetch all songs
 router.get("/", (req: Request, res: Response) => {

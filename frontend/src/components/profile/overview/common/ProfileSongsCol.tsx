@@ -5,6 +5,8 @@ import UpdateTrackMenu from "./track-menu/UpdateTrackMenu";
 import AddTrackMenu from "./track-menu/AddTrackMenu";
 import { assignHrColor } from "../../../../utils/songcardUtils";
 import { validateForm } from "@shared/utils/validation";
+import { useConnectionStatus } from "../../../../context/ConnectionStatusContext";
+import { addToOfflineQueue } from "../../../../utils/offlineUtils";
 import "../../../../styles/profile/overview/common/profile-songs-col.css";
 
 export interface ProfileSongsColHandle {
@@ -27,27 +29,14 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
     const [isAutoGenerating, setIsAutoGenerating] = useState(false); 
     const [openMenuId, setOpenMenuId] = useState<number | null>(null);
 
+    const { isOnline, isServerReachable } = useConnectionStatus();
+
     const handleMenuToggle = (songId: number) => {
-      setOpenMenuId((prevId) => (prevId === songId ? null : songId)); // Toggle the menu
+      setOpenMenuId((prevId) => (prevId === songId ? null : songId)); 
     };
 
     const handleMenuClose = () => {
-      setOpenMenuId(null); // Close all menus
-    };
-
-    const SERVER_IP = process.env.REACT_APP_SERVER_IP;
-
-    const checkServerStatus = async () => {
-      try {
-        const response = await fetch(`${SERVER_IP}/health-check`);
-        if (response.ok) {
-          console.log("Server is reachable");
-        } else {
-          console.log("Server is down");
-        }
-      } catch (error) {
-        console.error("Error reaching server:", error);
-      }
+      setOpenMenuId(null);
     };
 
     useImperativeHandle(ref, () => ({
@@ -56,32 +45,6 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
         setCurrentPage(1);
       },
     }));
-
-    const generateRandomSong = (): Song => {
-      const randomId = Date.now();
-      const randomArtist = `Artist ${Math.floor(Math.random() * 10) + 1}`;
-      const randomAlbum = `Album ${Math.floor(Math.random() * 5) + 1}`;
-      const randomGenre = `Genre ${Math.floor(Math.random() * 3) + 1}`;
-      const randomYear = `${2020 + Math.floor(Math.random() * 5)}`;
-      const randomMonth = `${Math.floor(Math.random() * 12) + 1}`.padStart(2, "0");
-      const randomDay = `${Math.floor(Math.random() * 28) + 1}`.padStart(2, "0");
-      const randomHour = `${Math.floor(Math.random() * 24)}`.padStart(2, "0");
-      const randomMinute = `${Math.floor(Math.random() * 60)}`.padStart(2, "0");
-
-      return {
-        id: randomId,
-        albumCover: "/images/vinyl-icon.svg",
-        title: `Random Song ${randomId}`,
-        artist: randomArtist,
-        album: randomAlbum,
-        genre: randomGenre,
-        hour: randomHour,
-        minute: randomMinute,
-        day: randomDay,
-        month: randomMonth,
-        year: randomYear,
-      };
-    };
 
     const fetchFilteredSongs = async () => {
       try {
@@ -122,46 +85,70 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
       fetchFilteredSongs();
     }, [selectedYear, selectedMonth, selectedDay]);
 
-    const toggleAutoGeneration = () => {
-      setIsAutoGenerating((prev) => !prev);
-    };
-
     useEffect(() => {
-      let interval: NodeJS.Timeout | null = null;
-    
-      if (isAutoGenerating) {
-        interval = setInterval(async () => {
-          const newSong = generateRandomSong();
-    
-          try {
-            const response = await fetch("http://localhost:5000/api/songs", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(newSong),
-            });
-    
-            if (!response.ok) {
-              throw new Error("Failed to add song to the backend");
-            }
-    
-            const addedSong = await response.json();
-    
-            fetchFilteredSongs();
-
-          } catch (error) {
-            console.error("Error adding song:", error);
-          }
-        }, 1500);
-      }
-    
-      return () => {
-        if (interval) {
-          clearInterval(interval); 
+      // Connect to the WebSocket server
+      const ws = new WebSocket("ws://localhost:5000");
+  
+      ws.onopen = () => {
+        console.log("Connected to WebSocket server");
+      };
+  
+      ws.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+  
+        if (message.type === "SONG_LIST") {
+          // Initial list of songs
+          setSongs(message.payload);
+        } else if (message.type === "NEW_SONG") {
+          // Add the new song to the list
+          setSongs((prevSongs) => [...prevSongs, message.payload]);
         }
       };
-    }, [isAutoGenerating]);
+  
+      ws.onclose = () => {
+        console.log("Disconnected from WebSocket server");
+      };
+  
+      ws.onerror = (error) => {
+        console.error("WebSocket error:", error);
+      };
+  
+      // Cleanup the WebSocket connection when the component unmounts
+      return () => {
+        ws.close();
+      };
+    }, []);
+
+    // Toggle auto-generation of songs
+    const toggleAutoGeneration = async () => {
+      try {
+        if (!isAutoGenerating) {
+          const response = await fetch("http://localhost:5000/api/songs/start-auto-generation", {
+            method: "POST",
+          });
+    
+          if (!response.ok) {
+            throw new Error("Failed to start auto-generation");
+          }
+    
+          console.log("Auto-generation started");
+        } else {
+          const response = await fetch("http://localhost:5000/api/songs/stop-auto-generation", {
+            method: "POST",
+          });
+    
+          if (!response.ok) {
+            throw new Error("Failed to stop auto-generation");
+          }
+    
+          console.log("Auto-generation stopped");
+        }
+    
+        setIsAutoGenerating((prev) => !prev);
+      } catch (error) {
+        console.error("Error toggling auto-generation:", error);
+      }
+    };
 
     const [selectedSong, setSelectedSong] = useState<Song | null>(null);
     const [isUpdateMenuOpen, setIsUpdateMenuOpen] = useState(false);
@@ -233,6 +220,17 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
       };
 
       try {
+        if (!isOnline || !isServerReachable) {
+          addToOfflineQueue({
+            method: "POST",
+            url: "http://localhost:5000/api/songs",
+            body: formattedSong,
+          });
+          setSuccessMessage("Track added locally. It will sync when back online.");
+          handleCloseAddMenu();
+          return;
+        }
+
         const response = await fetch("http://localhost:5000/api/songs", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
