@@ -25,11 +25,15 @@
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.2.0",
+    "@types/estree": "^1.0.7",
+    "@types/html-minifier-terser": "^7.0.2",
     "@types/jest": "^29.5.14",
+    "@types/json-schema": "^7.0.15",
     "@types/node": "^20",
     "@types/pg": "^8.11.11",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/semver": "^7.7.0",
     "@types/testing-library__react": "^10.0.1",
     "@types/whatwg-fetch": "^0.0.33",
     "autoprefixer": "^10.4.21",
@@ -41,6 +45,6 @@
     "tailwindcss": "^4.0.12",
     "ts-jest": "^29.2.6",
     "ts-node": "^10.9.2",
-    "typescript": "^5"
+    "typescript": "^4.9.5"
   }
 }

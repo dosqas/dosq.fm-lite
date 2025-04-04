@@ -30,6 +30,9 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
     const [openMenuId, setOpenMenuId] = useState<number | null>(null);
 
     const { isOnline, isServerReachable } = useConnectionStatus();
+    const [connectionStatus, setConnectionStatus] = useState("connecting");
+
+    const SERVER_IP = process.env.NEXT_PUBLIC_SERVER_IP;
 
     const handleMenuToggle = (songId: number) => {
       setOpenMenuId((prevId) => (prevId === songId ? null : songId)); 
@@ -49,7 +52,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
     const fetchFilteredSongs = async () => {
       try {
         const queryParams = new URLSearchParams();
-    
+  
         if (!selectedYear) {
           queryParams.append("from", "1900-01-01");
           queryParams.append("rangetype", "all");
@@ -66,14 +69,14 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
           );
           queryParams.append("rangetype", "1day");
         }
-
+  
         console.log("Fetching songs with query:", queryParams.toString());
-    
-        const response = await fetch(`http://localhost:5000/api/songs?${queryParams.toString()}`);
+  
+        const response = await fetch(`http://${SERVER_IP}/api/songs?${queryParams.toString()}`);
         if (!response.ok) {
           throw new Error("Failed to fetch filtered songs");
         }
-    
+  
         const data: Song[] = await response.json();
         setSongs(data);
       } catch (error) {
@@ -84,46 +87,106 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
     useEffect(() => {
       fetchFilteredSongs();
     }, [selectedYear, selectedMonth, selectedDay]);
-
+    
     useEffect(() => {
-      // Connect to the WebSocket server
-      const ws = new WebSocket("ws://localhost:5000");
-  
-      ws.onopen = () => {
-        console.log("Connected to WebSocket server");
-      };
-  
-      ws.onmessage = (event) => {
-        const message = JSON.parse(event.data);
-  
-        if (message.type === "SONG_LIST") {
-          // Initial list of songs
-          setSongs(message.payload);
-        } else if (message.type === "NEW_SONG") {
-          // Add the new song to the list
-          setSongs((prevSongs) => [...prevSongs, message.payload]);
+      let ws: WebSocket | null = null;
+      let retryCount = 0;
+      const maxRetries = 5;
+      const baseDelay = 1000;
+      let retryTimeout: NodeJS.Timeout | null = null;
+    
+      const connectWebSocket = () => {
+        setConnectionStatus(retryCount > 0 ? "retrying..." : "connecting");
+        
+        try {
+          ws = new WebSocket(`ws://${SERVER_IP}`);
+    
+          // Enhanced error event handler
+          ws.onerror = (event) => {
+            console.error("Detailed WebSocket error:", {
+              event,
+              readyState: ws?.readyState,
+              url: ws?.url,
+              timestamp: new Date().toISOString()
+            });
+            
+            // For Chrome/Firefox specific error detection
+            const errorMessage = (event as unknown as ErrorEvent)?.message || 'Unknown error';
+            console.error("Browser-reported error:", errorMessage);
+            
+            scheduleReconnect();
+          };
+    
+          ws.onopen = () => {
+            console.log("WebSocket connected successfully");
+            setConnectionStatus("connected");
+            retryCount = 0;
+          };
+    
+          ws.onmessage = (event) => {
+            // Message handling logic
+          };
+    
+          ws.onclose = (event) => {
+            console.log("WebSocket closed:", {
+              code: event.code,
+              reason: event.reason,
+              wasClean: event.wasClean
+            });
+            
+            if (!event.wasClean) {
+              scheduleReconnect();
+            }
+          };
+    
+        } catch (error) {
+          console.error("WebSocket initialization crashed:", error);
+          scheduleReconnect();
         }
       };
-  
-      ws.onclose = () => {
-        console.log("Disconnected from WebSocket server");
+    
+      const scheduleReconnect = () => {
+        if (retryCount < maxRetries) {
+          const delay = Math.min(baseDelay * Math.pow(2, retryCount), 30000); // Cap at 30s
+          retryCount++;
+          
+          console.groupCollapsed(`WebSocket retry #${retryCount}`);
+          console.log("Next attempt in:", `${delay}ms`);
+          console.log("Current retry count:", retryCount);
+          console.groupEnd();
+    
+          retryTimeout = setTimeout(connectWebSocket, delay);
+        } else {
+          console.error("Maximum retry attempts reached");
+          setConnectionStatus("failed");
+        }
       };
-  
-      ws.onerror = (error) => {
-        console.error("WebSocket error:", error);
-      };
-  
-      // Cleanup the WebSocket connection when the component unmounts
+    
+      // Initial connection
+      connectWebSocket();
+    
       return () => {
-        ws.close();
+        if (ws) {
+          // Disable all handlers before closing
+          ws.onopen = null;
+          ws.onerror = null;
+          ws.onclose = null;
+          ws.onmessage = null;
+          
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.close(1000, "Component unmounting");
+          }
+        }
+        if (retryTimeout) clearTimeout(retryTimeout);
       };
-    }, []);
+    }, [SERVER_IP]);
+    
 
     // Toggle auto-generation of songs
     const toggleAutoGeneration = async () => {
       try {
         if (!isAutoGenerating) {
-          const response = await fetch("http://localhost:5000/api/songs/start-auto-generation", {
+          const response = await fetch(`http://${SERVER_IP}/api/songs/start-auto-generation`, {
             method: "POST",
           });
     
@@ -133,7 +196,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
     
           console.log("Auto-generation started");
         } else {
-          const response = await fetch("http://localhost:5000/api/songs/stop-auto-generation", {
+          const response = await fetch(`http://${SERVER_IP}/api/songs/stop-auto-generation`, {
             method: "POST",
           });
     
@@ -223,7 +286,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
         if (!isOnline || !isServerReachable) {
           addToOfflineQueue({
             method: "POST",
-            url: "http://localhost:5000/api/songs",
+            url: `http://${SERVER_IP}/api/songs`,
             body: formattedSong,
           });
           setSuccessMessage("Track added locally. It will sync when back online.");
@@ -231,7 +294,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
           return;
         }
 
-        const response = await fetch("http://localhost:5000/api/songs", {
+        const response = await fetch(`http://${SERVER_IP}/api/songs`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formattedSong),
@@ -281,7 +344,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
       };
 
       try {
-        const response = await fetch(`http://localhost:5000/api/songs/${id}`, {
+        const response = await fetch(`http://${SERVER_IP}/api/songs/${id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formattedSong),
@@ -302,7 +365,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
 
     const handleDeleteSong = async (id: number) => {
       try {
-        const response = await fetch(`http://localhost:5000/api/songs/${id}`, {
+        const response = await fetch(`http://${SERVER_IP}/api/songs/${id}`, {
           method: "DELETE",
         });
     
@@ -378,118 +441,126 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
     
     return (
       <div className="profile-songs-col">
-        <div className="profile-songs-col-header">
-          <div className="profile-songs-col-items-per-page">
-            <label className="profile-songs-col-items-per-page-label" htmlFor="items-per-page">
-              Items per page:
-            </label>
-            <select
-              className="profile-songs-col-items-per-page-select"
-              id="items-per-page"
-              value={itemsPerPage}
-              onChange={(e) => {
-                const value = parseInt(e.target.value, 10);
-                setCurrentPage(1); 
-                setItemsPerPage(value); 
-              }}
-            >
-              <option value="5">5</option>
-              <option value="10">10</option>
-              <option value="15">15</option>
-              <option value="20">20</option>
-              <option value="25">25</option>
-            </select>
-          </div>
-          
-          <button onClick={toggleAutoGeneration} className="toggle-auto-generation-button">
-            {isAutoGenerating ? "Stop Auto-Generation" : "Start Auto-Generation"}
-          </button>
-        </div>
-
-        {paginatedSongs.map((song, index) => {
-          const hrColor = assignHrColor(index + (currentPage - 1) * itemsPerPage, songs.length);
-
-          return (
-            <SongCard
-              key={song.id}
-              albumCover={song.albumCover}
-              title={song.title}
-              artist={song.artist}
-              album={song.album}
-              genre={song.genre}
-              dateListened={`${song.hour}:${song.minute}, ${song.day}/${song.month}/${song.year}`}
-              onUpdate={() => handleOpenUpdateMenu(song)}
-              onDelete={() => handleDeleteSong(song.id)}
-              hrColor={hrColor}
-              isMenuOpen={openMenuId === song.id}
-              onMenuToggle={() => handleMenuToggle(song.id)} 
-              onMenuClose={handleMenuClose} 
-            />
-          );
-        })}
-
-      {itemsPerPage > 0 && totalPages > 0 && (
-      <div className="pagination-controls">
-        <div className="pagination-button-container" style={{ flex: "1 1 25%" }}>
-          {currentPage > 1 && (
-            <button onClick={handlePreviousPage} className="pagination-button">
-              Previous
-            </button>
-          )}
-        </div>
-
-        <div className="numbered-pagination" style={{ flex: "1 1 50%" }}>
-          {pageNumbers.map((page, index) =>
-            typeof page === "number" ? (
-              <button
-                key={index}
-                onClick={() => handlePageClick(page)}
-                className={`pagination-button ${page === currentPage ? "active" : ""}`}
-              >
-                {page}
+        {connectionStatus === "connected" ? (
+          <>
+            <div className="profile-songs-col-header">
+              <div className="profile-songs-col-items-per-page">
+                <label className="profile-songs-col-items-per-page-label" htmlFor="items-per-page">
+                  Items per page:
+                </label>
+                <select
+                  className="profile-songs-col-items-per-page-select"
+                  id="items-per-page"
+                  value={itemsPerPage}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value, 10);
+                    setCurrentPage(1);
+                    setItemsPerPage(value);
+                  }}
+                >
+                  <option value="5">5</option>
+                  <option value="10">10</option>
+                  <option value="15">15</option>
+                  <option value="20">20</option>
+                  <option value="25">25</option>
+                </select>
+              </div>
+              
+              <button onClick={toggleAutoGeneration} className="toggle-auto-generation-button">
+                {isAutoGenerating ? "Stop Auto-Generation" : "Start Auto-Generation"}
               </button>
-            ) : (
-              <span key={index} className="ellipsis">
-                {page}
-              </span>
-            )
-          )}
-        </div>
-
-        <div className="pagination-button-container" style={{ flex: "1 1 25%" }}>
-          {currentPage < totalPages && (
-            <button onClick={handleNextPage} className="pagination-button">
-              Next
-            </button>
+            </div>
+    
+            {paginatedSongs.map((song, index) => {
+              const hrColor = assignHrColor(index + (currentPage - 1) * itemsPerPage, songs.length);
+    
+              return (
+                <SongCard
+                  key={song.id}
+                  albumCover={song.albumCover}
+                  title={song.title}
+                  artist={song.artist}
+                  album={song.album}
+                  genre={song.genre}
+                  dateListened={`${song.hour}:${song.minute}, ${song.day}/${song.month}/${song.year}`}
+                  onUpdate={() => handleOpenUpdateMenu(song)}
+                  onDelete={() => handleDeleteSong(song.id)}
+                  hrColor={hrColor}
+                  isMenuOpen={openMenuId === song.id}
+                  onMenuToggle={() => handleMenuToggle(song.id)}
+                  onMenuClose={handleMenuClose}
+                />
+              );
+            })}
+    
+            {itemsPerPage > 0 && totalPages > 0 && (
+              <div className="pagination-controls">
+                <div className="pagination-button-container" style={{ flex: "1 1 25%" }}>
+                  {currentPage > 1 && (
+                    <button onClick={handlePreviousPage} className="pagination-button">
+                      Previous
+                    </button>
+                  )}
+                </div>
+    
+                <div className="numbered-pagination" style={{ flex: "1 1 50%" }}>
+                  {pageNumbers.map((page, index) =>
+                    typeof page === "number" ? (
+                      <button
+                        key={index}
+                        onClick={() => handlePageClick(page)}
+                        className={`pagination-button ${page === currentPage ? "active" : ""}`}
+                      >
+                        {page}
+                      </button>
+                    ) : (
+                      <span key={index} className="ellipsis">
+                        {page}
+                      </span>
+                    )
+                  )}
+                </div>
+    
+                <div className="pagination-button-container" style={{ flex: "1 1 25%" }}>
+                  {currentPage < totalPages && (
+                    <button onClick={handleNextPage} className="pagination-button">
+                      Next
+                    </button>
+                  )}
+                </div>
+              </div>
             )}
+    
+            {isAddMenuOpen && (
+              <AddTrackMenu
+                formData={formData}
+                error={error}
+                successMessage={successMessage}
+                onClose={handleCloseAddMenu}
+                onSubmit={handleAddSong}
+                onInputChange={(e) => {
+                  const { name, value } = e.target;
+                  setFormData({ ...formData, [name]: value });
+                }}
+              />
+            )}
+    
+            {isUpdateMenuOpen && selectedSong && (
+              <UpdateTrackMenu
+                song={selectedSong}
+                error={error}
+                successMessage={successMessage}
+                onClose={handleCloseUpdateMenu}
+                onSubmit={(updatedSong) =>
+                  handleUpdateSong(selectedSong.id, updatedSong)
+                }
+              />
+            )}
+          </>
+        ) : (
+          <div className="connection-status" style={{ color: "white", alignContent: "center", justifyContent: "center" }}>
+            Connecting to server... {connectionStatus === "retrying" && "(Retrying)"}
           </div>
-        </div>
-      )}
-
-        {isAddMenuOpen && (
-          <AddTrackMenu
-            formData={formData}
-            error={error}
-            successMessage={successMessage}
-            onClose={handleCloseAddMenu}
-            onSubmit={handleAddSong}
-            onInputChange={(e) => {
-              const { name, value } = e.target;
-              setFormData({ ...formData, [name]: value });
-            }}
-          />
-        )}
-
-        {isUpdateMenuOpen && selectedSong && (
-          <UpdateTrackMenu
-            song={selectedSong}
-            error={error}
-            successMessage={successMessage}
-            onClose={handleCloseUpdateMenu}
-            onSubmit={(updatedSong) =>
-              handleUpdateSong(selectedSong.id, updatedSong)
-            }
-          />
         )}
       </div>
     );

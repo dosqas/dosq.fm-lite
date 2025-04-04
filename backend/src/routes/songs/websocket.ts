@@ -1,8 +1,8 @@
 import { Server } from "ws";
-import { generateRandomSong } from "../../utils/songUtils";
+import { generateRandomSong, sortSongs } from "../../utils/songUtils";
+import { songs, updateSongs } from "../../data/songs";
 import { Song } from "@shared/types/song";
 
-const songs: Song[] = []; // Store generated songs
 let isAutoGenerating = false; // Track whether auto-generation is running
 let wss: Server; // Store the WebSocket server instance
 
@@ -14,6 +14,10 @@ export const setupWebSocket = (server: any) => {
 
     // Send the current list of songs to the new client
     ws.send(JSON.stringify({ type: "SONG_LIST", payload: songs }));
+
+    ws.on("message", (message) => {
+      console.log("Received message:", message);
+    });
 
     ws.on("close", () => {
       console.log("Client disconnected");
@@ -35,7 +39,8 @@ export const startAutoGeneration = () => {
     }
 
     const newSong = generateRandomSong();
-    songs.push(newSong);
+    const updatedSongs = sortSongs([...songs, newSong]);
+    updateSongs(updatedSongs);
 
     // Broadcast the new song to all connected clients
     wss.clients.forEach((client) => {

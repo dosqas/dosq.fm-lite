@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useEffect, useState } from "react";
-import { Song } from "@/types/song";
+import { Song } from "@shared/types/song";
 import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -34,13 +34,13 @@ const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
   const [groupedData, setGroupedData] = useState<{ [key: string]: number }>({});
   const chartRef = useRef<any>(null);
 
+  const SERVER_IP = process.env.NEXT_PUBLIC_SERVER_IP;
+
   useEffect(() => {
-    let intervalId: NodeJS.Timeout;
-  
     const fetchGroupedData = async () => {
       try {
         const queryParams = new URLSearchParams();
-    
+  
         if (!selectedYear) {
           queryParams.append("from", "1900-01-01");
           queryParams.append("rangetype", "all");
@@ -51,41 +51,148 @@ const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
           queryParams.append("from", `${selectedYear}-${selectedMonth}-01`);
           queryParams.append("rangetype", "1month");
         }
-    
-        const response = await fetch(`http://localhost:5000/api/songs?${queryParams.toString()}`);
+  
+        const response = await fetch(`http://${SERVER_IP}/api/songs?${queryParams.toString()}`);
         if (!response.ok) {
           throw new Error("Failed to fetch filtered songs");
         }
-    
+  
         const data: Song[] = await response.json();
-    
+  
         const grouped = data.reduce((acc: { [key: string]: number }, song: Song) => {
           let key = "";
           if (!selectedYear) {
             key = song.year;
           } else if (!selectedMonth) {
-            key = song.month.padStart(2, "0"); 
+            key = song.month.padStart(2, "0");
           } else {
-            key = song.day.padStart(2, "0"); 
+            key = song.day.padStart(2, "0");
           }
-    
+  
           acc[key] = (acc[key] || 0) + 1;
           return acc;
         }, {});
-    
-        setGroupedData(grouped); 
+  
+        setGroupedData(grouped);
       } catch (error) {
         console.error("Error fetching grouped data:", error);
       }
     };
   
-    fetchGroupedData();
-    intervalId = setInterval(fetchGroupedData, 500); 
+    fetchGroupedData(); // Fetch data once when the component mounts or filters change
+  }, [selectedYear, selectedMonth, selectedDay]);
+  
+  useEffect(() => {
+    let ws: WebSocket | null = null;
+    let retryCount = 0;
+    const maxRetries = 5;
+    const baseDelay = 1000; // Start with 1 second delay
+    let retryTimeout: NodeJS.Timeout | null = null;
+  
+    const connectWebSocket = () => {
+      try {
+        ws = new WebSocket(`ws://${SERVER_IP}`);
+  
+        ws.onopen = () => {
+          console.log("Connected to WebSocket server");
+          retryCount = 0; // Reset retry counter on success
+          if (retryTimeout) {
+            clearTimeout(retryTimeout);
+          }
+        };
+  
+        ws.onmessage = (event) => {
+          try {
+            const message = JSON.parse(event.data);
+  
+            if (message.type === "SONG_LIST") {
+              const grouped = message.payload.reduce((acc: { [key: string]: number }, song: Song) => {
+                let key = "";
+                if (!selectedYear) {
+                  key = song.year;
+                } else if (!selectedMonth) {
+                  key = song.month.padStart(2, "0");
+                } else {
+                  key = song.day.padStart(2, "0");
+                }
+                acc[key] = (acc[key] || 0) + 1;
+                return acc;
+              }, {});
+              setGroupedData(grouped);
+            } 
+            else if (message.type === "NEW_SONG") {
+              const newSong: Song = message.payload;
+              setGroupedData((prevGroupedData) => {
+                const updatedGroupedData = { ...prevGroupedData };
+                let key = "";
+  
+                if (!selectedYear) {
+                  key = newSong.year;
+                } else if (!selectedMonth) {
+                  key = newSong.month.padStart(2, "0");
+                } else {
+                  key = newSong.day.padStart(2, "0");
+                }
+  
+                updatedGroupedData[key] = (updatedGroupedData[key] || 0) + 1;
+                return updatedGroupedData;
+              });
+            }
+          } catch (parseError) {
+            console.error("Failed to parse WebSocket message:", parseError);
+          }
+        };
+  
+        ws.onclose = (event) => {
+          console.log(`Disconnected (code: ${event.code}, reason: ${event.reason})`);
+          if (!event.wasClean && retryCount < maxRetries) {
+            const delay = Math.min(baseDelay * Math.pow(2, retryCount), 30000); // Exponential backoff with max 30s
+            retryCount++;
+            console.log(`Retrying in ${delay}ms (attempt ${retryCount}/${maxRetries})`);
+            retryTimeout = setTimeout(connectWebSocket, delay);
+          }
+        };
+  
+        ws.onerror = (error) => {
+          console.error("WebSocket error event:", {
+            error,
+            readyState: ws?.readyState,
+            url: ws?.url
+          });
+          // The close handler will trigger reconnect
+        };
+  
+      } catch (error) {
+        console.error("WebSocket initialization error:", error);
+        if (retryCount < maxRetries) {
+          const delay = Math.min(baseDelay * Math.pow(2, retryCount), 30000);
+          retryCount++;
+          retryTimeout = setTimeout(connectWebSocket, delay);
+        }
+      }
+    };
+  
+    // Initial connection
+    connectWebSocket();
   
     return () => {
-      clearInterval(intervalId);
+      if (ws) {
+        // Clean up all event handlers
+        ws.onopen = null;
+        ws.onmessage = null;
+        ws.onclose = null;
+        ws.onerror = null;
+        
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.close(1000, "Component unmounting");
+        }
+      }
+      if (retryTimeout) {
+        clearTimeout(retryTimeout);
+      }
     };
-  }, [selectedYear, selectedMonth, selectedDay]);
+  }, [selectedYear, selectedMonth, selectedDay, SERVER_IP]);
+
 
   const allMonths = useMemo(() => {
     return Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, "0"));
