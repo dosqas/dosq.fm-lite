@@ -30,6 +30,71 @@
   margin: 0.5rem 0;
 }
 
+/* Video Upload Section */
+.video-upload-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  gap: 0.5rem;
+}
+
+.video-upload-section h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #FFFFFF;
+  margin-bottom: 0.5rem;
+}
+
+.video-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.video-buttons button {
+  padding: 0.5rem 1rem;
+  background-color: #B51811;
+  color: #FFFFFF;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.video-buttons button:hover {
+  background-color: #D32F2F;
+}
+
+.video-buttons button:active {
+  background-color: #B51811;
+}
+
+.video-upload-section p {
+  font-size: 0.875rem;
+  color: #ABA8A7;
+  margin: 0;
+}
+
+.uploaded-video {
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.uploaded-video h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #FFFFFF;
+  margin-bottom: 0.5rem;
+}
+
+.uploaded-video video {
+  width: 100%;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
 .profile-sidebar-add-track-button {
   display: flex;
   align-items: center;

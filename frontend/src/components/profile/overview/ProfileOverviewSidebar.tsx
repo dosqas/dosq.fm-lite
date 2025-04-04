@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, RefObject } from "react";
+import React, { useState, useEffect, useRef, RefObject } from "react";
 import "../../../styles/profile/overview/profile-overview-sidebar.css";
 import { ProfileSongsColHandle } from "./common/ProfileSongsCol";
 
@@ -13,45 +13,89 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ trackingRef }) => {
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
   const [uploadedVideoUrl, setUploadedVideoUrl] = useState<string | null>(null);
 
+  // Ref for the hidden file input
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Fetch the video tied to the profile on component load
+  useEffect(() => {
+    const fetchUploadedVideo = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/profile/get-video");
+        if (response.ok) {
+          const data = await response.json();
+          if (data.videoPath) {
+            setUploadedVideoUrl(data.videoPath);
+          }
+        } else {
+          console.error("No video found.");
+        }
+      } catch (error) {
+        console.error("Error fetching video:", error);
+      }
+    };
+  
+    fetchUploadedVideo();
+  }, []);
+
   const handleAddTrackClick = () => {
     if (trackingRef.current) {
       trackingRef.current.openAddMenu();
     }
   };
 
-  const handleVideoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleVideoChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
-      setVideo(event.target.files[0]);
-    }
-  };
-
-  const handleVideoUpload = async () => {
-    if (!video) {
-      setUploadStatus("Please select a video to upload.");
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("video", video);
-
-    try {
-      const response = await fetch("http://localhost:5000/api/songs/upload-video", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setUploadedVideoUrl(data.videoPath);
-        setUploadStatus("Video uploaded successfully!");
-      } else {
-        setUploadStatus("Failed to upload video.");
+      const selectedVideo = event.target.files[0];
+      setVideo(selectedVideo);
+  
+      const formData = new FormData();
+      formData.append("video", selectedVideo);
+  
+      try {
+        const response = await fetch("http://localhost:5000/api/profile/upload-video", {
+          method: "POST",
+          body: formData,
+        });
+  
+        if (response.ok) {
+          const data = await response.json();
+          setUploadedVideoUrl(data.videoPath);
+          setUploadStatus("Video uploaded successfully!");
+        } else {
+          setUploadStatus("Failed to upload video.");
+        }
+      } catch (error) {
+        console.error("Error uploading video:", error);
+        setUploadStatus("Error uploading video.");
       }
-    } catch (error) {
-      console.error("Error uploading video:", error);
-      setUploadStatus("Error uploading video.");
     }
   };
+
+  const handleUploadButtonClick = () => {
+    // Trigger the file input dialog
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleDownloadVideo = () => {
+    if (uploadedVideoUrl) {
+      const link = document.createElement("a");
+      link.href = `http://localhost:5000${uploadedVideoUrl}`;
+      link.download = "favorite-concert-video.mp4"; // Default download name
+      link.click();
+    }
+  };
+
+  useEffect(() => {
+    if (uploadStatus) {
+      const timer = setTimeout(() => {
+        setUploadStatus(null); // Clear the upload status after 1 second
+      }, 1000);
+  
+      return () => clearTimeout(timer); // Cleanup the timer if the component unmounts or `uploadStatus` changes
+    }
+  }, [uploadStatus]);
 
   return (
     <div className="profile-sidebar">
@@ -61,13 +105,23 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ trackingRef }) => {
       <hr className="profile-sidebar-divider" />
 
       <div className="video-upload-section">
-        <h3>Upload a Video</h3>
-        <input type="file" accept="video/*" onChange={handleVideoChange} />
-        <button onClick={handleVideoUpload}>Upload Video</button>
+        <h3>Favorite concert video</h3>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="video/*"
+          onChange={handleVideoChange}
+          style={{ display: "none" }} // Hide the file input
+        />
+        <div className="video-buttons">
+          <button onClick={handleUploadButtonClick}>Upload Video</button>
+          {uploadedVideoUrl && (
+            <button onClick={handleDownloadVideo}>Download Video</button>
+          )}
+        </div>
         {uploadStatus && <p>{uploadStatus}</p>}
         {uploadedVideoUrl && (
           <div className="uploaded-video">
-            <h4>Uploaded Video:</h4>
             <video controls width="100%">
               <source src={`http://localhost:5000${uploadedVideoUrl}`} type="video/mp4" />
               Your browser does not support the video tag.
