@@ -153,22 +153,7 @@ const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
           }
         };
   
-        ws.onerror = (error) => {
-          console.error("WebSocket error event:", {
-            error,
-            readyState: ws?.readyState,
-            url: ws?.url
-          });
-          // The close handler will trigger reconnect
-        };
-  
       } catch (error) {
-        console.error("WebSocket initialization error:", error);
-        if (retryCount < maxRetries) {
-          const delay = Math.min(baseDelay * Math.pow(2, retryCount), 30000);
-          retryCount++;
-          retryTimeout = setTimeout(connectWebSocket, delay);
-        }
       }
     };
   
