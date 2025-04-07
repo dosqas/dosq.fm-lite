@@ -59,3 +59,4 @@ backend/coverage/
 
 backend/uploads/videos/*
 !backend/uploads/videos/.gitkeep
+backend/uploads/videos/profile-video.mp4
