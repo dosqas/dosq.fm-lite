@@ -49,21 +49,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
 
     useEffect(() => {
       if (isOnline && isServerReachable && songs.length < 15) {
-        const syncAndFetchSongs = async () => {
-          console.log("Server is back online. Syncing offline queue...");
-          await syncOfflineQueue(); // Wait for the offline queue to sync
-          console.log("Offline queue synced. Fetching initial songs...");
-    
-          const fetchedSongs = await fetchSongs(1); // Fetch the first page of songs
-          setSongs((prevSongs) => {
-            const songIds = new Set(prevSongs.map((song) => song.id)); // Track existing song IDs
-            const uniqueFetchedSongs = fetchedSongs.filter((song: Song) => !songIds.has(song.id)); // Filter out duplicates
-            const mergedSongs = [...prevSongs, ...uniqueFetchedSongs]; // Merge existing and fetched songs
-            return sortSongs(mergedSongs); // Sort the merged list
-          });
-        };
-    
-        syncAndFetchSongs();
+        fetchSongs(1);
       }
     }, [isOnline, isServerReachable, songs.length]);
 
@@ -82,15 +68,15 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
       },
     }));
 
-    const fetchSongs = async (page: number): Promise<Song[]> => {
+    const fetchSongs = async (page: number) => {
       console.log("Fetching songs for page:", page);
       if (isLoading) {
         console.log("Skipping fetch: Already loading");
-        return [];
+        return;
       }
       if (!hasMore && page > 1) {
         console.log("Skipping fetch: No more songs to load");
-        return [];
+        return;
       }
     
       setIsLoading(true);
@@ -133,7 +119,8 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
         setSongs((prevSongs) => {
           const songIds = new Set(prevSongs.map((song) => song.id)); // Track existing song IDs
           const uniqueSongs = newSongs.filter((song: Song) => !songIds.has(song.id)); // Filter out duplicates
-          return [...prevSongs, ...uniqueSongs];
+          const mergedSongs = [...prevSongs, ...uniqueSongs]; // Merge existing and fetched songs
+          return sortSongs(mergedSongs); // Sort the merged list
         });
 
         // Update the hasMore state
@@ -141,7 +128,6 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
       } catch (error) {
       } finally {
         setIsLoading(false);
-        return [];
       }
     };
 
