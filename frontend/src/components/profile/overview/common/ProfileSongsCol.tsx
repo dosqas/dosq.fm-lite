@@ -7,7 +7,7 @@ import { assignHrColor } from "../../../../utils/songcardUtils";
 import { validateForm } from "@shared/utils/validation";
 import { sortSongs, filterSongs } from "@shared/utils/filterAndSort";
 import { useConnectionStatus } from "../../../../context/ConnectionStatusContext";
-import { addToOfflineQueue } from "../../../../utils/offlineUtils";
+import { addToOfflineQueue } from "@shared/offline/data/offlineQueue";
 import "../../../../styles/profile/overview/common/profile-songs-col.css";
 
 export interface ProfileSongsColHandle {
@@ -30,7 +30,6 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
     const itemsPerPage = 15; // Fixed to 15 items per page
     const containerRef = useRef<HTMLDivElement>(null); // Ref for the scrollable container
 
-
     const [isAutoGenerating, setIsAutoGenerating] = useState(false); 
     
     const [openMenuId, setOpenMenuId] = useState<number | null>(null);
@@ -39,6 +38,12 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
     const [connectionStatus, setConnectionStatus] = useState("connecting");
 
     const SERVER_IP = process.env.NEXT_PUBLIC_SERVER_IP;
+
+    useEffect(() => {
+      if (isOnline && isServerReachable && songs.length === 0) {
+        fetchSongs(1);
+      }
+    }, [isOnline, isServerReachable, songs.length]);
 
     const handleMenuToggle = (songId: number) => {
       setOpenMenuId((prevId) => (prevId === songId ? null : songId)); 
@@ -93,7 +98,6 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
         console.log("Fetching songs with query params:", queryParams.toString());
     
         const response = await fetch(`http://${SERVER_IP}/api/songs/limited?${queryParams.toString()}`);
-        if (!response.ok) throw new Error(`Failed to fetch songs: ${response.status}`);
 
         const result = await response.json();
 
@@ -113,7 +117,6 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
         // Update the hasMore state
         setHasMore(moreAvailable);
       } catch (error) {
-        console.error("Error fetching songs:", error);
       } finally {
         setIsLoading(false);
       }
@@ -234,7 +237,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
     
       const scheduleReconnect = () => {
         if (retryCount < maxRetries) {
-          const delay = Math.min(baseDelay * Math.pow(2, retryCount), 30000); // Cap at 30s
+          const delay = Math.min(baseDelay * Math.pow(2, retryCount), 30000); 
           retryCount++;
           
           console.groupCollapsed(`WebSocket retry #${retryCount}`);
@@ -244,7 +247,6 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
     
           retryTimeout = setTimeout(connectWebSocket, delay);
         } else {
-          console.error("Maximum retry attempts reached");
           setConnectionStatus("failed");
         }
       };
@@ -370,16 +372,42 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
     
       try {
         if (!isOnline || !isServerReachable) {
+          // Add to offline queue
           addToOfflineQueue({
             method: "POST",
             url: `http://${SERVER_IP}/api/songs`,
             body: formattedSong,
           });
+    
+          // Reflect changes in the frontend (temporary id for offline mode)
+          setSongs((prevSongs) => {
+            const updatedSongs = [...prevSongs, { ...formattedSong, id: Date.now() }];
+            const filteredSongs = filterSongs(
+              updatedSongs,
+              selectedYear
+                ? selectedMonth
+                  ? selectedDay
+                    ? `${selectedYear}-${selectedMonth.padStart(2, "0")}-${selectedDay.padStart(2, "0")}`
+                    : `${selectedYear}-${selectedMonth.padStart(2, "0")}-01`
+                  : `${selectedYear}-01-01`
+                : null,
+              !selectedYear
+                ? "all"
+                : !selectedMonth
+                ? "year"
+                : !selectedDay
+                ? "1month"
+                : "1day"
+            );
+            return sortSongs(filteredSongs);
+          });
+    
           setSuccessMessage("Track added locally. It will sync when back online.");
           handleCloseAddMenu();
           return;
         }
     
+        // Send the song to the backend
         const response = await fetch(`http://${SERVER_IP}/api/songs`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -390,10 +418,31 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
           throw new Error("Failed to add song");
         }
     
+        // Get the song with the generated id from the backend
         const newSong = await response.json();
     
         // Add the new song to the songs list in the frontend
-        setSongs((prevSongs) => [...prevSongs, newSong]);
+        setSongs((prevSongs) => {
+          const updatedSongs = [...prevSongs, newSong];
+          const filteredSongs = filterSongs(
+            updatedSongs,
+            selectedYear
+              ? selectedMonth
+                ? selectedDay
+                  ? `${selectedYear}-${selectedMonth.padStart(2, "0")}-${selectedDay.padStart(2, "0")}`
+                  : `${selectedYear}-${selectedMonth.padStart(2, "0")}-01`
+                : `${selectedYear}-01-01`
+              : null,
+            !selectedYear
+              ? "all"
+              : !selectedMonth
+              ? "year"
+              : !selectedDay
+              ? "1month"
+              : "1day"
+          );
+          return sortSongs(filteredSongs);
+        });
     
         setSuccessMessage("Track added successfully!");
         setError(null);
@@ -433,6 +482,44 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
       };
     
       try {
+        if (!isOnline || !isServerReachable) {
+          // Add to offline queue
+          addToOfflineQueue({
+            method: "PATCH",
+            url: `http://${SERVER_IP}/api/songs/${id}`,
+            body: formattedSong,
+          });
+    
+          // Reflect changes in the frontend
+          setSongs((prevSongs) => {
+            const updatedSongs = prevSongs.map((song) =>
+              song.id === id ? { ...song, ...formattedSong } : song
+            );
+            const filteredSongs = filterSongs(
+              updatedSongs,
+              selectedYear
+                ? selectedMonth
+                  ? selectedDay
+                    ? `${selectedYear}-${selectedMonth.padStart(2, "0")}-${selectedDay.padStart(2, "0")}`
+                    : `${selectedYear}-${selectedMonth.padStart(2, "0")}-01`
+                  : `${selectedYear}-01-01`
+                : null,
+              !selectedYear
+                ? "all"
+                : !selectedMonth
+                ? "year"
+                : !selectedDay
+                ? "1month"
+                : "1day"
+            );
+            return sortSongs(filteredSongs);
+          });
+    
+          setSuccessMessage("Track updated locally. It will sync when back online.");
+          handleCloseUpdateMenu();
+          return;
+        }
+    
         const response = await fetch(`http://${SERVER_IP}/api/songs/${id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -445,11 +532,29 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
     
         const updatedSongData = await response.json();
     
-        setSongs((prevSongs) =>
-          prevSongs.map((song) =>
+        setSongs((prevSongs) => {
+          const updatedSongs = prevSongs.map((song) =>
             song.id === id ? { ...song, ...updatedSongData } : song
-          )
-        );
+          );
+          const filteredSongs = filterSongs(
+            updatedSongs,
+            selectedYear
+              ? selectedMonth
+                ? selectedDay
+                  ? `${selectedYear}-${selectedMonth.padStart(2, "0")}-${selectedDay.padStart(2, "0")}`
+                  : `${selectedYear}-${selectedMonth.padStart(2, "0")}-01`
+                : `${selectedYear}-01-01`
+              : null,
+            !selectedYear
+              ? "all"
+              : !selectedMonth
+              ? "year"
+              : !selectedDay
+              ? "1month"
+              : "1day"
+          );
+          return sortSongs(filteredSongs);
+        });
     
         handleCloseUpdateMenu();
       } catch (error) {
@@ -460,6 +565,41 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
 
     const handleDeleteSong = async (id: number) => {
       try {
+        if (!isOnline || !isServerReachable) {
+          // Add to offline queue
+          addToOfflineQueue({
+            method: "DELETE",
+            url: `http://${SERVER_IP}/api/songs/${id}`,
+            body: null,
+          });
+    
+          // Reflect changes in the frontend
+          setSongs((prevSongs) => {
+            const updatedSongs = prevSongs.filter((song) => song.id !== id);
+            const filteredSongs = filterSongs(
+              updatedSongs,
+              selectedYear
+                ? selectedMonth
+                  ? selectedDay
+                    ? `${selectedYear}-${selectedMonth.padStart(2, "0")}-${selectedDay.padStart(2, "0")}`
+                    : `${selectedYear}-${selectedMonth.padStart(2, "0")}-01`
+                  : `${selectedYear}-01-01`
+                : null,
+              !selectedYear
+                ? "all"
+                : !selectedMonth
+                ? "year"
+                : !selectedDay
+                ? "1month"
+                : "1day"
+            );
+            return sortSongs(filteredSongs);
+          });
+    
+          setSuccessMessage("Track deleted locally. It will sync when back online.");
+          return;
+        }
+    
         const response = await fetch(`http://${SERVER_IP}/api/songs/${id}`, {
           method: "DELETE",
         });
@@ -468,9 +608,27 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
           throw new Error("Failed to delete song");
         }
     
-        const newSongs = songs.filter((song) => song.id !== id);
-        setSongs(newSongs);
-        
+        setSongs((prevSongs) => {
+          const updatedSongs = prevSongs.filter((song) => song.id !== id);
+          const filteredSongs = filterSongs(
+            updatedSongs,
+            selectedYear
+              ? selectedMonth
+                ? selectedDay
+                  ? `${selectedYear}-${selectedMonth.padStart(2, "0")}-${selectedDay.padStart(2, "0")}`
+                  : `${selectedYear}-${selectedMonth.padStart(2, "0")}-01`
+                : `${selectedYear}-01-01`
+              : null,
+            !selectedYear
+              ? "all"
+              : !selectedMonth
+              ? "year"
+              : !selectedDay
+              ? "1month"
+              : "1day"
+          );
+          return sortSongs(filteredSongs);
+        });
       } catch (error) {
         console.error("Error deleting song:", error);
         setError("Failed to delete song");

@@ -27,10 +27,8 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ trackingRef }) => {
             setUploadedVideoUrl(data.videoPath);
           }
         } else {
-          console.error("No video found.");
         }
       } catch (error) {
-        console.error("Error fetching video:", error);
       }
     };
   

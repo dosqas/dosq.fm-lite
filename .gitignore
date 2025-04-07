@@ -56,3 +56,6 @@ frontend/out/
 # Ignore coverage reports
 frontend/coverage/
 backend/coverage/
+
+backend/uploads/videos/*
+!backend/uploads/videos/.gitkeep
