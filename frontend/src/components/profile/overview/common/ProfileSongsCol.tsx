@@ -9,6 +9,7 @@ import { sortSongs, filterSongs } from "@shared/utils/filterAndSort";
 import { useConnectionStatus } from "../../../../context/ConnectionStatusContext";
 import { addToOfflineQueue } from "@shared/offline/data/offlineQueue";
 import "../../../../styles/profile/overview/common/profile-songs-col.css";
+import { syncOfflineQueue } from "@shared/offline/utils/offlineQueueUtils";
 
 export interface ProfileSongsColHandle {
   openAddMenu: () => void;
@@ -40,8 +41,29 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
     const SERVER_IP = process.env.NEXT_PUBLIC_SERVER_IP;
 
     useEffect(() => {
-      if (isOnline && isServerReachable && songs.length === 0) {
-        fetchSongs(1);
+      if (isOnline && isServerReachable) {
+        console.log("Server is back online. Syncing offline queue...");
+        syncOfflineQueue();
+      }
+    }, [isOnline, isServerReachable]);
+
+    useEffect(() => {
+      if (isOnline && isServerReachable && songs.length < 15) {
+        const syncAndFetchSongs = async () => {
+          console.log("Server is back online. Syncing offline queue...");
+          await syncOfflineQueue(); // Wait for the offline queue to sync
+          console.log("Offline queue synced. Fetching initial songs...");
+    
+          const fetchedSongs = await fetchSongs(1); // Fetch the first page of songs
+          setSongs((prevSongs) => {
+            const songIds = new Set(prevSongs.map((song) => song.id)); // Track existing song IDs
+            const uniqueFetchedSongs = fetchedSongs.filter((song: Song) => !songIds.has(song.id)); // Filter out duplicates
+            const mergedSongs = [...prevSongs, ...uniqueFetchedSongs]; // Merge existing and fetched songs
+            return sortSongs(mergedSongs); // Sort the merged list
+          });
+        };
+    
+        syncAndFetchSongs();
       }
     }, [isOnline, isServerReachable, songs.length]);
 
@@ -60,15 +82,15 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
       },
     }));
 
-    const fetchSongs = async (page: number) => {
+    const fetchSongs = async (page: number): Promise<Song[]> => {
       console.log("Fetching songs for page:", page);
       if (isLoading) {
         console.log("Skipping fetch: Already loading");
-        return;
+        return [];
       }
       if (!hasMore && page > 1) {
         console.log("Skipping fetch: No more songs to load");
-        return;
+        return [];
       }
     
       setIsLoading(true);
@@ -119,6 +141,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
       } catch (error) {
       } finally {
         setIsLoading(false);
+        return [];
       }
     };
 

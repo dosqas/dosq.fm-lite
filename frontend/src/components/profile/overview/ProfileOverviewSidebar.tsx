@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, RefObject } from "react";
 import "../../../styles/profile/overview/profile-overview-sidebar.css";
 import { ProfileSongsColHandle } from "./common/ProfileSongsCol";
+import { useConnectionStatus } from "../../../context/ConnectionStatusContext";
 
 interface ProfileSidebarProps {
   trackingRef: RefObject<ProfileSongsColHandle | null>;
@@ -14,26 +15,41 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ trackingRef }) => {
   const [uploadedVideoUrl, setUploadedVideoUrl] = useState<string | null>(null);
 
   // Ref for the hidden file input
+  const [videoLoaded, setVideoLoaded] = useState(false); // Track if the video has been loaded
+  const { isOnline, isServerReachable } = useConnectionStatus(); // Use connection status
+
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Fetch the video tied to the profile on component load
-  useEffect(() => {
-    const fetchUploadedVideo = async () => {
-      try {
-        const response = await fetch("http://localhost:5000/api/profile/get-video");
-        if (response.ok) {
-          const data = await response.json();
-          if (data.videoPath) {
-            setUploadedVideoUrl(data.videoPath);
-          }
-        } else {
+  const fetchUploadedVideo = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/api/profile/get-video");
+      if (response.ok) {
+        const data = await response.json();
+        if (data.videoPath) {
+          setUploadedVideoUrl(data.videoPath);
+          setVideoLoaded(true); // Mark the video as loaded
         }
-      } catch (error) {
+      } else {
       }
-    };
-  
-    fetchUploadedVideo();
-  }, []);
+    } catch (error) {
+    }
+  };
+
+  // Fetch the video on component load
+  useEffect(() => {
+    if (!videoLoaded) {
+      fetchUploadedVideo();
+    }
+  }, [videoLoaded]);
+
+  useEffect(() => {
+    if (isOnline && isServerReachable && !videoLoaded) {
+      console.log("Server is back online. Fetching uploaded video...");
+      fetchUploadedVideo();
+    }
+  }, [isOnline, isServerReachable, videoLoaded]);
+
 
   const handleAddTrackClick = () => {
     if (trackingRef.current) {
