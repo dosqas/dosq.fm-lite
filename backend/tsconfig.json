@@ -11,8 +11,9 @@
     "moduleResolution": "node", // Use Node.js module resolution
     "types": ["node", "jest"], // Include Node.js and Jest types
     "paths": {
-      "@shared/*": ["../shared/*"] // New alias for shared folder
+      "@shared/*": ["shared/*"] // New alias for shared folder
     },
+    "baseUrl": "../", // Base directory for resolving paths
   },
   "include": ["src/**/*.ts", "tests/**/*.ts", "jest.setup.js"], // Include source and test files
   "exclude": ["node_modules", "dist"] // Exclude node_modules and output directory

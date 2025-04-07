@@ -1,7 +1,8 @@
 import express, { Request, Response } from "express";
 import { songs, updateSongs } from "../../data/songs";
 import { Song } from "@shared/types/song";
-import { sortSongs, filterSongs } from "../../utils/songUtils";
+import { groupSongs } from "../../utils/songUtils";
+import { sortSongs, filterSongs } from "../../../../shared/utils/filterAndSort";
 import { validateForm } from "../../../../shared/utils/validation";
 import { startAutoGeneration, stopAutoGeneration } from "./websocket";
 
@@ -43,6 +44,41 @@ router.get("/", (req: Request, res: Response) => {
     res.status(200).json(filteredSongs);
   } catch (error) {
     console.error("Error fetching songs:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// GET: Fetch a limited number of songs (for pagination/infinite scrolling)
+router.get("/limited", (req: Request, res: Response) => {
+  const { limit = "15", page = "1", from, rangetype } = req.query as {
+    limit?: string;
+    page?: string;
+    from?: string;
+    rangetype?: "all" | "year" | "1month" | "1day";
+  };
+
+  try {
+    // Parse limit and page as integers
+    const limitNum = parseInt(limit, 10);
+    const pageNum = parseInt(page, 10);
+
+    if (isNaN(limitNum) || isNaN(pageNum) || limitNum <= 0 || pageNum <= 0) {
+      return res.status(400).json({ error: "Invalid limit or page parameter" });
+    }
+
+    // Filter and sort songs based on the query
+    const filteredSongs = sortSongs(filterSongs(songs, from, rangetype));
+
+    // Paginate the songs
+    const startIndex = (pageNum - 1) * limitNum;
+    const paginatedSongs = filteredSongs.slice(startIndex, startIndex + limitNum);
+
+    // Check if there are more songs to load
+    const hasMore = startIndex + paginatedSongs.length < filteredSongs.length;
+
+    res.status(200).json({ songs: paginatedSongs, hasMore });
+  } catch (error) {
+    console.error("Error fetching limited songs:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });

@@ -3,7 +3,7 @@ import "jest";
 import express from "express";
 import songRouter from "../../../../src/routes/songs/[id]/route";
 import { songs, updateSongs } from "../../../../src/data/songs";
-import { sortSongs } from "../../../../src/utils/songUtils";
+import { sortSongs } from "@shared/utils/filterAndSort";
 
 import { validateForm } from "../../../../../shared/utils/validation";
 

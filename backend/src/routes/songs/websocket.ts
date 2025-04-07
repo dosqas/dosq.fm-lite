@@ -1,5 +1,6 @@
 import { Server } from "ws";
-import { generateRandomSong, sortSongs } from "../../utils/songUtils";
+import { generateRandomSong, groupSongs } from "../../utils/songUtils";
+import { sortSongs, filterSongs } from "../../../../shared/utils/filterAndSort";
 import { songs, updateSongs } from "../../data/songs";
 import { Song } from "@shared/types/song";
 
@@ -12,11 +13,37 @@ export const setupWebSocket = (server: any) => {
   wss.on("connection", (ws) => {
     console.log("Client connected");
 
-    // Send the current list of songs to the new client
-    ws.send(JSON.stringify({ type: "SONG_LIST", payload: songs }));
+    // Send the initial grouped song data to the new client
+    const filteredSongs = filterSongs(songs, undefined, "all"); // No filter, default to all songs
+    const groupedData = groupSongs(filteredSongs, "all"); // Default to grouping by year
+    ws.send(JSON.stringify({ type: "GROUPED_SONGS", payload: groupedData }));
 
     ws.on("message", (message) => {
-      console.log("Received message:", message);
+      try {
+        const parsedMessage = JSON.parse(message.toString());
+        if (parsedMessage.type === "REQUEST_GROUPED_SONGS") {    
+          const { rangeType, year, month, day } = parsedMessage.payload;
+    
+          // Construct the `from` date based on the payload
+          const from = year
+            ? month
+              ? day
+                ? `${year}-${month}-${day}`
+                : `${year}-${month}-01`
+              : `${year}-01-01`
+            : undefined;
+        
+          // Filter and group the songs
+          const filteredSongs = filterSongs(songs, from, rangeType);
+    
+          const groupedData = groupSongs(filteredSongs, rangeType || "all");
+    
+          // Send the grouped data back to the client
+          ws.send(JSON.stringify({ type: "GROUPED_SONGS", payload: groupedData }));
+        }
+      } catch (error) {
+        console.error("Failed to process client message:", error);
+      }
     });
 
     ws.on("close", () => {
@@ -42,10 +69,20 @@ export const startAutoGeneration = () => {
     const updatedSongs = sortSongs([...songs, newSong]);
     updateSongs(updatedSongs);
 
-    // Broadcast the new song to all connected clients
+    // Generate updated grouped data
+    const filteredSongs = filterSongs(updatedSongs, undefined, "all"); // No filter, default to all songs
+    const groupedData = groupSongs(filteredSongs, "all"); // Default to grouping by year
+
+    // Broadcast the new song and updated grouped data to all connected clients
     wss.clients.forEach((client) => {
       if (client.readyState === client.OPEN) {
-        client.send(JSON.stringify({ type: "NEW_SONG", payload: newSong }));
+        try {
+          client.send(JSON.stringify({ type: "NEW_SONG", payload: newSong })); // For songs list
+    
+          client.send(JSON.stringify({ type: "GROUPED_SONGS", payload: groupedData })); // For sidebar
+        } catch (error) {
+          console.error("Failed to send WebSocket message:", error);
+        }
       }
     });
   }, 1500);

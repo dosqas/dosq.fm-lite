@@ -37,52 +37,6 @@ const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
   const SERVER_IP = process.env.NEXT_PUBLIC_SERVER_IP;
 
   useEffect(() => {
-    const fetchGroupedData = async () => {
-      try {
-        const queryParams = new URLSearchParams();
-  
-        if (!selectedYear) {
-          queryParams.append("from", "1900-01-01");
-          queryParams.append("rangetype", "all");
-        } else if (!selectedMonth) {
-          queryParams.append("from", `${selectedYear}-01-01`);
-          queryParams.append("rangetype", "year");
-        } else {
-          queryParams.append("from", `${selectedYear}-${selectedMonth}-01`);
-          queryParams.append("rangetype", "1month");
-        }
-  
-        const response = await fetch(`http://${SERVER_IP}/api/songs?${queryParams.toString()}`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch filtered songs");
-        }
-  
-        const data: Song[] = await response.json();
-  
-        const grouped = data.reduce((acc: { [key: string]: number }, song: Song) => {
-          let key = "";
-          if (!selectedYear) {
-            key = song.year;
-          } else if (!selectedMonth) {
-            key = song.month.padStart(2, "0");
-          } else {
-            key = song.day.padStart(2, "0");
-          }
-  
-          acc[key] = (acc[key] || 0) + 1;
-          return acc;
-        }, {});
-  
-        setGroupedData(grouped);
-      } catch (error) {
-        console.error("Error fetching grouped data:", error);
-      }
-    };
-  
-    fetchGroupedData(); // Fetch data once when the component mounts or filters change
-  }, [selectedYear, selectedMonth, selectedDay]);
-  
-  useEffect(() => {
     let ws: WebSocket | null = null;
     let retryCount = 0;
     const maxRetries = 5;
@@ -99,44 +53,36 @@ const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
           if (retryTimeout) {
             clearTimeout(retryTimeout);
           }
+        
+          // Determine the range type and include filtering criteria
+          const rangeType = !selectedYear
+            ? "all"
+            : !selectedMonth
+            ? "year"
+            : "1month";
+        
+          // Send the request with the filtering criteria
+          if (ws) {
+            ws.send(
+              JSON.stringify({
+                type: "REQUEST_GROUPED_SONGS",
+                payload: {
+                  rangeType,
+                  year: selectedYear || null,
+                  month: selectedMonth || null,
+                  day: selectedDay || null,
+                },
+              })
+            );
+          }
         };
   
         ws.onmessage = (event) => {
           try {
             const message = JSON.parse(event.data);
   
-            if (message.type === "SONG_LIST") {
-              const grouped = message.payload.reduce((acc: { [key: string]: number }, song: Song) => {
-                let key = "";
-                if (!selectedYear) {
-                  key = song.year;
-                } else if (!selectedMonth) {
-                  key = song.month.padStart(2, "0");
-                } else {
-                  key = song.day.padStart(2, "0");
-                }
-                acc[key] = (acc[key] || 0) + 1;
-                return acc;
-              }, {});
-              setGroupedData(grouped);
-            } 
-            else if (message.type === "NEW_SONG") {
-              const newSong: Song = message.payload;
-              setGroupedData((prevGroupedData) => {
-                const updatedGroupedData = { ...prevGroupedData };
-                let key = "";
-  
-                if (!selectedYear) {
-                  key = newSong.year;
-                } else if (!selectedMonth) {
-                  key = newSong.month.padStart(2, "0");
-                } else {
-                  key = newSong.day.padStart(2, "0");
-                }
-  
-                updatedGroupedData[key] = (updatedGroupedData[key] || 0) + 1;
-                return updatedGroupedData;
-              });
+            if (message.type === "GROUPED_SONGS") {
+              setGroupedData(message.payload); // Update grouped data for the chart
             }
           } catch (parseError) {
             console.error("Failed to parse WebSocket message:", parseError);
@@ -152,8 +98,8 @@ const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
             retryTimeout = setTimeout(connectWebSocket, delay);
           }
         };
-  
       } catch (error) {
+        console.error("WebSocket connection failed:", error);
       }
     };
   
@@ -162,12 +108,11 @@ const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
   
     return () => {
       if (ws) {
-        // Clean up all event handlers
         ws.onopen = null;
         ws.onmessage = null;
         ws.onclose = null;
         ws.onerror = null;
-        
+  
         if (ws.readyState === WebSocket.OPEN) {
           ws.close(1000, "Component unmounting");
         }

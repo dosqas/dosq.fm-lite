@@ -12,81 +12,15 @@
     justify-content: center;
 }
 
-.pagination-controls {
-    display: flex;
-    justify-content: space-between;
-    gap: 0.5rem;
-    margin-top: 1rem;
-    color: #ABA8A7;
-    font-size: 1.1rem;
-    width: 100%;
-
-};
-
-.pagination-button-container {
-    display: flex;
-    gap: 0.5rem;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-}
-
-.pagination-button:hover {
-    cursor: pointer;
-    text-decoration: underline;
-    text-decoration-color: #B51811;
-    text-underline-offset: 0.25rem;
-    color: #dddddd;
-}
-
-.pagination-button.active {
-    cursor: pointer;
-    text-decoration: underline;
-    text-decoration-color: #B51811;
-    text-underline-offset: 0.25rem;
-    color: #dddddd;
-  }
-
-.numbered-pagination {
-    display: flex;
-    gap: 0.5rem;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-}
-
 .profile-songs-col-header {
     display: flex;
-    align-items: center;
+    flex-direction: row;
     justify-content: space-between;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-    padding: 0.5rem; 
-    color: #ABA8A7;
-    font-size: 1.1rem;
-}
-
-.profile-songs-col-items-per-page {
-    display: flex;
-    justify-content: center;
     align-items: center;
-    gap: 0.5rem;
+    width: 100%;
+    color: #FFFFFF;
+    font-weight: 600;
     margin-bottom: 1rem;
-    margin-left: -1.5rem;
-    color: #ABA8A7;
-    font-size: 1.1rem;
-    width: 30%;
-}
-
-.profile-songs-col-items-per-page-select {
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    border: 1px solid #ABA8A7; 
-    background-color: #2e2e2e; 
-    color: #ABA8A7; 
-    width: 30%; 
-    padding: 0.3rem; 
 }
 
 .toggle-auto-generation-button {
@@ -109,4 +43,17 @@
   .toggle-auto-generation-button:active {
     background-color: #B51811;
   }
-  
+ 
+  .profile-songs-col-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    height: 700px;
+    padding-top: 0.5rem;
+    overflow-y: hidden;
+    overflow-x: hidden;
+  }
+
+  .profile-songs-col-list::-webkit-scrollbar {
+    display: none; /* For Chrome, Safari, and Opera */
+}

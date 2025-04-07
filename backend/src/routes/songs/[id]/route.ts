@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express";
 import { songs, updateSongs } from "../../../data/songs";
-import { sortSongs } from "../../../utils/songUtils";
+import { sortSongs } from "../../../../../shared/utils/filterAndSort";
 import { validateForm } from "../../../../../shared/utils/validation";
 
 const router = express.Router();

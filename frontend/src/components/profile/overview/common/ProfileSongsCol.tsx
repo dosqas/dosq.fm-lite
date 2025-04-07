@@ -1,10 +1,11 @@
-import React, { useState, forwardRef, useImperativeHandle, useMemo, useEffect } from "react";
+import React, { useState, forwardRef, useImperativeHandle, useRef, useEffect } from "react";
 import { Song } from "@shared/types/song";
 import SongCard from "./SongCard";
 import UpdateTrackMenu from "./track-menu/UpdateTrackMenu";
 import AddTrackMenu from "./track-menu/AddTrackMenu";
 import { assignHrColor } from "../../../../utils/songcardUtils";
 import { validateForm } from "@shared/utils/validation";
+import { sortSongs, filterSongs } from "@shared/utils/filterAndSort";
 import { useConnectionStatus } from "../../../../context/ConnectionStatusContext";
 import { addToOfflineQueue } from "../../../../utils/offlineUtils";
 import "../../../../styles/profile/overview/common/profile-songs-col.css";
@@ -23,10 +24,15 @@ interface ProfileSongsColProps {
 const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
   ({ selectedYear, selectedMonth, selectedDay }, ref) => {
     const [songs, setSongs] = useState<Song[]>([]);
+    const [currentPage, setCurrentPage] = useState(1); // Track the current page
+    const [hasMore, setHasMore] = useState(true); // Track if there are more songs to fetch
+    const [isLoading, setIsLoading] = useState(false); // Track loading state
+    const itemsPerPage = 15; // Fixed to 15 items per page
+    const containerRef = useRef<HTMLDivElement>(null); // Ref for the scrollable container
 
-    const [currentPage, setCurrentPage] = useState(1); 
-    const [itemsPerPage, setItemsPerPage] = useState(25);
+
     const [isAutoGenerating, setIsAutoGenerating] = useState(false); 
+    
     const [openMenuId, setOpenMenuId] = useState<number | null>(null);
 
     const { isOnline, isServerReachable } = useConnectionStatus();
@@ -49,10 +55,24 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
       },
     }));
 
-    const fetchFilteredSongs = async () => {
+    const fetchSongs = async (page: number) => {
+      console.log("Fetching songs for page:", page);
+      if (isLoading) {
+        console.log("Skipping fetch: Already loading");
+        return;
+      }
+      if (!hasMore && page > 1) {
+        console.log("Skipping fetch: No more songs to load");
+        return;
+      }
+    
+      setIsLoading(true);
+    
       try {
         const queryParams = new URLSearchParams();
-  
+        queryParams.append("page", page.toString());
+        queryParams.append("limit", itemsPerPage.toString());
+    
         if (!selectedYear) {
           queryParams.append("from", "1900-01-01");
           queryParams.append("rangetype", "all");
@@ -69,24 +89,71 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
           );
           queryParams.append("rangetype", "1day");
         }
-  
-        console.log("Fetching songs with query:", queryParams.toString());
-  
-        const response = await fetch(`http://${SERVER_IP}/api/songs?${queryParams.toString()}`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch filtered songs");
-        }
-  
-        const data: Song[] = await response.json();
-        setSongs(data);
+
+        console.log("Fetching songs with query params:", queryParams.toString());
+    
+        const response = await fetch(`http://${SERVER_IP}/api/songs/limited?${queryParams.toString()}`);
+        if (!response.ok) throw new Error(`Failed to fetch songs: ${response.status}`);
+
+        const result = await response.json();
+
+        // Extract songs and hasMore from the response
+        const { songs: newSongs, hasMore: moreAvailable } = result;
+
+        console.log("Fetched songs:", newSongs);
+        console.log("Updated hasMore:", moreAvailable);
+
+        // Append only unique songs to the list
+        setSongs((prevSongs) => {
+          const songIds = new Set(prevSongs.map((song) => song.id)); // Track existing song IDs
+          const uniqueSongs = newSongs.filter((song: Song) => !songIds.has(song.id)); // Filter out duplicates
+          return [...prevSongs, ...uniqueSongs];
+        });
+
+        // Update the hasMore state
+        setHasMore(moreAvailable);
       } catch (error) {
-        console.error("Error fetching filtered songs:", error);
+        console.error("Error fetching songs:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     useEffect(() => {
-      fetchFilteredSongs();
+      console.log("Selected filters changed:", { selectedYear, selectedMonth, selectedDay });
+      setSongs([]); // Reset songs when filters change
+      setCurrentPage(1);
+      setHasMore(true);
+      fetchSongs(1);
     }, [selectedYear, selectedMonth, selectedDay]);
+
+    const handleScroll = () => {
+      if (!containerRef.current || isLoading || !hasMore) return;
+
+      const { scrollTop, clientHeight, scrollHeight } = containerRef.current;
+
+      // Check if the user has scrolled near the bottom
+      if (scrollTop + clientHeight >= scrollHeight - 50) {
+        setCurrentPage((prevPage) => {
+          const nextPage = prevPage + 1;
+          fetchSongs(nextPage);
+          return nextPage;
+        });
+      }
+    };
+
+    // Attach scroll event listener
+    useEffect(() => {
+      const container = containerRef.current;
+      if (!container) return;
+
+      container.addEventListener("scroll", handleScroll);
+
+      return () => {
+        container.removeEventListener("scroll", handleScroll);
+      };
+    }, [handleScroll]);
+
     
     useEffect(() => {
       let ws: WebSocket | null = null;
@@ -107,8 +174,44 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
             retryCount = 0;
           };
     
+
           ws.onmessage = (event) => {
-            // Message handling logic
+            try {
+              const message = JSON.parse(event.data);
+
+              if (message.type === "NEW_SONG") {
+                const newSong = message.payload;
+
+                setSongs((prevSongs) => {
+                  // Combine the new song with the existing list
+                  const updatedSongs = [newSong, ...prevSongs];
+
+                  // Apply filtering based on the current filters
+                  const filteredSongs = filterSongs(
+                    updatedSongs,
+                    selectedYear
+                      ? selectedMonth
+                        ? selectedDay
+                          ? `${selectedYear}-${selectedMonth.padStart(2, "0")}-${selectedDay.padStart(2, "0")}`
+                          : `${selectedYear}-${selectedMonth.padStart(2, "0")}-01`
+                        : `${selectedYear}-01-01`
+                      : null,
+                    !selectedYear
+                      ? "all"
+                      : !selectedMonth
+                      ? "year"
+                      : !selectedDay
+                      ? "1month"
+                      : "1day"
+                  );
+
+                  // Sort the filtered songs
+                  return sortSongs(filteredSongs);
+                });
+              }
+            } catch (error) {
+              console.error("Failed to process WebSocket message:", error);
+            }
           };
     
           ws.onclose = (event) => {
@@ -249,14 +352,14 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
 
     const handleAddSong = async (e: React.FormEvent) => {
       e.preventDefault();
-
+    
       const validationResult = validateForm(formData);
-
+    
       if (validationResult) {
         setError(validationResult);
         return;
       }
-
+    
       const formattedSong = {
         ...formData,
         hour: padWithZero(formData.hour),
@@ -264,7 +367,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
         day: padWithZero(formData.day),
         month: padWithZero(formData.month),
       };
-
+    
       try {
         if (!isOnline || !isServerReachable) {
           addToOfflineQueue({
@@ -276,7 +379,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
           handleCloseAddMenu();
           return;
         }
-
+    
         const response = await fetch(`http://${SERVER_IP}/api/songs`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -288,7 +391,10 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
         }
     
         const newSong = await response.json();
-        fetchFilteredSongs();
+    
+        // Add the new song to the songs list in the frontend
+        setSongs((prevSongs) => [...prevSongs, newSong]);
+    
         setSuccessMessage("Track added successfully!");
         setError(null);
         handleCloseAddMenu();
@@ -312,12 +418,12 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
 
     const handleUpdateSong = async (id: number, updatedSong: Partial<Song>) => {
       const validationResult = validateForm(updatedSong as Song);
-
+    
       if (validationResult) {
         setError(validationResult);
         return;
       }
-
+    
       const formattedSong = {
         ...updatedSong,
         hour: padWithZero(updatedSong.hour || ""),
@@ -325,7 +431,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
         day: padWithZero(updatedSong.day || ""),
         month: padWithZero(updatedSong.month || ""),
       };
-
+    
       try {
         const response = await fetch(`http://${SERVER_IP}/api/songs/${id}`, {
           method: "PATCH",
@@ -338,7 +444,13 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
         }
     
         const updatedSongData = await response.json();
-        fetchFilteredSongs();        
+    
+        setSongs((prevSongs) =>
+          prevSongs.map((song) =>
+            song.id === id ? { ...song, ...updatedSongData } : song
+          )
+        );
+    
         handleCloseUpdateMenu();
       } catch (error) {
         console.error("Error updating song:", error);
@@ -356,7 +468,9 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
           throw new Error("Failed to delete song");
         }
     
-        fetchFilteredSongs();
+        const newSongs = songs.filter((song) => song.id !== id);
+        setSongs(newSongs);
+        
       } catch (error) {
         console.error("Error deleting song:", error);
         setError("Failed to delete song");
@@ -366,151 +480,57 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
     const padWithZero = (value: string) => {
       return value.padStart(2, "0");
     };
-
-    const totalPages = Math.ceil(songs.length / itemsPerPage);
-    const paginatedSongs = songs.slice(
-      (currentPage - 1) * itemsPerPage,
-      currentPage * itemsPerPage
-    );
-
-    const handlePageClick = (pageNumber: number) => {
-      setCurrentPage(pageNumber);
-    };
-
-    const handlePreviousPage = () => {
-      if (currentPage > 1) {
-        setCurrentPage((prevPage) => prevPage - 1);
-      }
-    };
-
-    const handleNextPage = () => {
-      if (currentPage < totalPages) {
-        setCurrentPage((prevPage) => prevPage + 1);
-      }
-    };
-
-    const generatePageNumbers = () => {
-      const pageNumbers: (number | string)[] = [];
-      const maxVisiblePages = 5; 
-
-      if (totalPages <= maxVisiblePages) {
-        for (let i = 1; i <= totalPages; i++) {
-          pageNumbers.push(i);
-        }
-      } else {
-        pageNumbers.push(1);
-
-        if (currentPage > 3) {
-          pageNumbers.push("...");
-        }
-
-        const startPage = Math.max(2, currentPage - 1);
-        const endPage = Math.min(totalPages - 1, currentPage + 1);
-        for (let i = startPage; i <= endPage; i++) {
-          pageNumbers.push(i);
-        }
-
-        if (currentPage < totalPages - 2) {
-          pageNumbers.push("...");
-        }
-
-        pageNumbers.push(totalPages);
-      }
-
-      return pageNumbers;
-    };
-
-    const pageNumbers = generatePageNumbers();
     
     return (
       <div className="profile-songs-col">
         <div className="profile-songs-col-header">
-          <div className="profile-songs-col-items-per-page">
-            <label className="profile-songs-col-items-per-page-label" htmlFor="items-per-page">
-              Items per page:
-            </label>
-            <select
-              className="profile-songs-col-items-per-page-select"
-              id="items-per-page"
-              value={itemsPerPage}
-              onChange={(e) => {
-                const value = parseInt(e.target.value, 10);
-                setCurrentPage(1);
-                setItemsPerPage(value);
-              }}
-            >
-              <option value="5">5</option>
-              <option value="10">10</option>
-              <option value="15">15</option>
-              <option value="20">20</option>
-              <option value="25">25</option>
-            </select>
-          </div>
-          
           <button onClick={toggleAutoGeneration} className="toggle-auto-generation-button">
             {isAutoGenerating ? "Stop Auto-Generation" : "Start Auto-Generation"}
           </button>
         </div>
     
-        {paginatedSongs.map((song, index) => {
-          const hrColor = assignHrColor(index + (currentPage - 1) * itemsPerPage, songs.length);
+        <div
+          className="profile-songs-col-list"
+          ref={containerRef}
+          style={{
+            height: "600px", // Fixed height for scrolling
+            overflowY: "auto",
+            position: "relative",
+          }}
+          onScroll={handleScroll} // Attach the scroll handler
+        >
+          {songs.map((song, index) => {
+            const hrColor = assignHrColor(index, songs.length); // Use the index directly
     
-          return (
-            <SongCard
-              key={song.id}
-              albumCover={song.albumCover}
-              title={song.title}
-              artist={song.artist}
-              album={song.album}
-              genre={song.genre}
-              dateListened={`${song.hour}:${song.minute}, ${song.day}/${song.month}/${song.year}`}
-              onUpdate={() => handleOpenUpdateMenu(song)}
-              onDelete={() => handleDeleteSong(song.id)}
-              hrColor={hrColor}
-              isMenuOpen={openMenuId === song.id}
-              onMenuToggle={() => handleMenuToggle(song.id)}
-              onMenuClose={handleMenuClose}
-            />
-          );
-        })}
+            return (
+              <SongCard
+                key={song.id}
+                albumCover={song.albumCover}
+                title={song.title}
+                artist={song.artist}
+                album={song.album}
+                genre={song.genre}
+                dateListened={`${song.hour}:${song.minute}, ${song.day}/${song.month}/${song.year}`}
+                onUpdate={() => handleOpenUpdateMenu(song)}
+                onDelete={() => handleDeleteSong(song.id)}
+                hrColor={hrColor}
+                isMenuOpen={openMenuId === song.id}
+                onMenuToggle={() => handleMenuToggle(song.id)}
+                onMenuClose={handleMenuClose}
+              />
+            );
+          })}
     
-        {itemsPerPage > 0 && totalPages > 0 && (
-          <div className="pagination-controls">
-            <div className="pagination-button-container" style={{ flex: "1 1 25%" }}>
-              {currentPage > 1 && (
-                <button onClick={handlePreviousPage} className="pagination-button">
-                  Previous
-                </button>
-              )}
+          {isLoading && (
+            <div className="loading-indicator">
+              <div className="loading-spinner"></div>
             </div>
+          )}
     
-            <div className="numbered-pagination" style={{ flex: "1 1 50%" }}>
-              {pageNumbers.map((page, index) =>
-                typeof page === "number" ? (
-                  <button
-                    key={index}
-                    onClick={() => handlePageClick(page)}
-                    className={`pagination-button ${page === currentPage ? "active" : ""}`}
-                  >
-                    {page}
-                  </button>
-                ) : (
-                  <span key={index} className="ellipsis">
-                    {page}
-                  </span>
-                )
-              )}
-            </div>
-    
-            <div className="pagination-button-container" style={{ flex: "1 1 25%" }}>
-              {currentPage < totalPages && (
-                <button onClick={handleNextPage} className="pagination-button">
-                  Next
-                </button>
-              )}
-            </div>
-          </div>
-        )}
+          {!hasMore && songs.length > 0 && (
+            <div className="no-more-songs-message" style= {{color:"white", display:"flex", justifyContent:"center"}}>No more songs to load</div>
+          )}
+        </div>
     
         {isAddMenuOpen && (
           <AddTrackMenu
@@ -532,9 +552,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
             error={error}
             successMessage={successMessage}
             onClose={handleCloseUpdateMenu}
-            onSubmit={(updatedSong) =>
-              handleUpdateSong(selectedSong.id, updatedSong)
-            }
+            onSubmit={(updatedSong) => handleUpdateSong(selectedSong.id, updatedSong)}
           />
         )}
       </div>

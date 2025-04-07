@@ -2,7 +2,7 @@ import request from "supertest";
 import express from "express";
 import songsRouter from "../../../src/routes/songs/route";
 import { songs, updateSongs } from "../../../src/data/songs";
-import { filterSongs, sortSongs } from "../../../src/utils/songUtils";
+import { filterSongs, sortSongs } from "@shared/utils/filterAndSort";
 import { validateForm } from "../../../../shared/utils/validation";
 
 jest.mock("../../../src/data/songs", () => ({

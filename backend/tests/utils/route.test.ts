@@ -1,5 +1,6 @@
-import { sortSongs, filterSongs, assignHrColor, groupSongs } from "../../src/utils/songUtils";
-import { Song } from "../../src/types/song";
+import { groupSongs } from "../../src/utils/songUtils";
+import { sortSongs, filterSongs } from "@shared/utils/filterAndSort";
+import { Song } from "@shared/types/song";
 
 describe("Utils: songUtils", () => {
   describe("sortSongs", () => {
@@ -93,23 +94,6 @@ describe("Utils: songUtils", () => {
     test("should return no songs if no match is found", () => {
       const filteredSongs = filterSongs(songs, "2020-01-01", "year");
       expect(filteredSongs).toEqual([]);
-    });
-  });
-
-  describe("assignHrColor", () => {
-    test("should return 'green' for top third", () => {
-      expect(assignHrColor(0, 9)).toBe("green");
-      expect(assignHrColor(2, 9)).toBe("green");
-    });
-
-    test("should return 'orange' for middle third", () => {
-      expect(assignHrColor(3, 9)).toBe("orange");
-      expect(assignHrColor(5, 9)).toBe("orange");
-    });
-
-    test("should return 'red' for bottom third", () => {
-      expect(assignHrColor(6, 9)).toBe("red");
-      expect(assignHrColor(8, 9)).toBe("red");
     });
   });
 
