@@ -33,7 +33,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
 
     const [isAutoGenerating, setIsAutoGenerating] = useState(false); 
     
-    const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+    const [openMenuId, setOpenMenuId] = useState<number | string | null>(null);
 
     const { isOnline, isServerReachable } = useConnectionStatus();
     const [connectionStatus, setConnectionStatus] = useState("connecting");
@@ -53,10 +53,10 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
       }
     }, [isOnline, isServerReachable, songs.length]);
 
-    const handleMenuToggle = (songId: number) => {
+    const handleMenuToggle = (songId: number | string) => {
       setOpenMenuId((prevId) => (prevId === songId ? null : songId)); 
     };
-
+    
     const handleMenuClose = () => {
       setOpenMenuId(null);
     };
@@ -433,9 +433,24 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
     
         // Add the new song to the songs list in the frontend
         setSongs((prevSongs) => {
-          const updatedSongs = [...prevSongs, newSong];
+          const updatedSongs = prevSongs.map((song) => {
+            // Check if the song has a temporary ID
+            if (typeof song.id === "string" && song.id.startsWith("temp_")) {
+              // Replace the temporary ID with the real ID from the newSong
+              const realId = newSong.id; // Assuming newSong contains the real ID
+              if (song.id === newSong.tempId) {
+                return { ...song, id: realId }; // Replace tempId with real ID
+              }
+            }
+            return song; // Keep other songs unchanged
+          });
+        
+          // Add the new song to the list
+          const mergedSongs = [...updatedSongs, newSong];
+        
+          // Filter and sort the songs
           const filteredSongs = filterSongs(
-            updatedSongs,
+            mergedSongs,
             selectedYear
               ? selectedMonth
                 ? selectedDay
@@ -451,6 +466,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
               ? "1month"
               : "1day"
           );
+        
           return sortSongs(filteredSongs);
         });
     
@@ -475,7 +491,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
       setIsUpdateMenuOpen(false);
     };
 
-    const handleUpdateSong = async (id: number, updatedSong: Partial<Song>) => {
+    const handleUpdateSong = async (id: number | string, updatedSong: Partial<Song>) => {
       const validationResult = validateForm(updatedSong as Song);
     
       if (validationResult) {
@@ -502,9 +518,12 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
     
           // Reflect changes in the frontend
           setSongs((prevSongs) => {
+            // Update the song with the matching ID
             const updatedSongs = prevSongs.map((song) =>
               song.id === id ? { ...song, ...formattedSong } : song
             );
+          
+            // Apply filtering based on the selected filters
             const filteredSongs = filterSongs(
               updatedSongs,
               selectedYear
@@ -522,6 +541,8 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
                 ? "1month"
                 : "1day"
             );
+          
+            // Sort the filtered songs
             return sortSongs(filteredSongs);
           });
     
@@ -573,7 +594,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
       }
     };
 
-    const handleDeleteSong = async (id: number) => {
+    const handleDeleteSong = async (id: string | number) => {
       try {
         if (!isOnline || !isServerReachable) {
           // Add to offline queue
@@ -585,7 +606,10 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
     
           // Reflect changes in the frontend
           setSongs((prevSongs) => {
+            // Remove the song with the matching ID
             const updatedSongs = prevSongs.filter((song) => song.id !== id);
+          
+            // Apply filtering based on the selected filters
             const filteredSongs = filterSongs(
               updatedSongs,
               selectedYear
@@ -603,6 +627,8 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
                 ? "1month"
                 : "1day"
             );
+          
+            // Sort the filtered songs
             return sortSongs(filteredSongs);
           });
     
@@ -680,10 +706,10 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
                 genre={song.genre}
                 dateListened={`${song.hour}:${song.minute}, ${song.day}/${song.month}/${song.year}`}
                 onUpdate={() => handleOpenUpdateMenu(song)}
-                onDelete={() => handleDeleteSong(Number(song.id))}
+                onDelete={() => handleDeleteSong(song.id)}
                 hrColor={hrColor}
                 isMenuOpen={openMenuId === song.id}
-                onMenuToggle={() => handleMenuToggle(Number(song.id))}
+                onMenuToggle={() => handleMenuToggle(song.id)}
                 onMenuClose={handleMenuClose}
               />
             );
@@ -720,7 +746,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
             error={error}
             successMessage={successMessage}
             onClose={handleCloseUpdateMenu}
-            onSubmit={(updatedSong) => handleUpdateSong(Number(selectedSong.id), updatedSong)}
+            onSubmit={(updatedSong) => handleUpdateSong(selectedSong.id, updatedSong)}
           />
         )}
       </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import TrackMenu from "./TrackMenu";
-import { Song } from "../../../../../../../shared/types/song"; 
+import { Song } from "../../../../../../../shared/types/song"; // Adjust the import path as necessary
 
 interface UpdateTrackMenuProps {
   song: Song;
@@ -17,7 +17,7 @@ const UpdateTrackMenu: React.FC<UpdateTrackMenuProps> = ({
   onClose,
   onSubmit,
 }) => {
-  const [formData, setFormData] = useState<Song>(song); 
+  const [formData, setFormData] = useState<Song>(song);
 
   useEffect(() => {
     setFormData(song);
@@ -25,13 +25,14 @@ const UpdateTrackMenu: React.FC<UpdateTrackMenuProps> = ({
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value }); 
+    setFormData({ ...formData, [name]: value });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    onSubmit(formData);
+    // Ensure the `id` is preserved correctly
+    onSubmit({ ...formData, id: song.id });
   };
 
   return (
