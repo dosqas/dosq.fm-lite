@@ -19,7 +19,7 @@ export const ConnectionStatusProvider: React.FC<{ children: React.ReactNode }> =
   const [isServerReachable, setIsServerReachable] = useState(true);
   const [statusMessage, setStatusMessage] = useState("");
 
-  const SERVER_IP = process.env.REACT_APP_SERVER_IP || "http://localhost:5000";
+  const SERVER_IP = process.env.NEXT_PUBLIC_SERVER_IP;
 
   const checkServerStatus = async () => {
     if (checkServerStatus.isRunning) {
@@ -29,7 +29,7 @@ export const ConnectionStatusProvider: React.FC<{ children: React.ReactNode }> =
     checkServerStatus.isRunning = true;
   
     try {
-      const response = await fetch(`${SERVER_IP}/health-check`);
+      const response = await fetch(`http://${SERVER_IP}/health-check`);
       if (response.ok) {
         setIsServerReachable(true);
       } else {

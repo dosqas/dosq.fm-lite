@@ -2,33 +2,39 @@ import { getOfflineQueue, saveOfflineQueue, clearOfflineQueue } from "../data/of
 
 export const syncOfflineQueue = async () => {
   const queue = getOfflineQueue();
+  const idMap = new Map(); // To track tempId to serverId mappings
 
-  if (queue.length === 0) {
-    console.log("No offline requests to sync.");
-    return;
-  }
-
-  console.log("Syncing offline requests:", queue);
-
-  for (const request of queue) {
+  for (let i = 0; i < queue.length; i++) {
+    const request = queue[i];
+    
     try {
-      const response = await fetch(request.url, {
+      // Replace temp IDs in URLs and bodies
+      if (request.body?.tempId && idMap.has(request.body.tempId)) {
+        request.body.id = idMap.get(request.body.tempId);
+        delete request.body.tempId;
+      }
+
+      const url = request.url.replace(/temp_[^/]+/g, (match) => 
+        idMap.get(match) || match
+      );
+
+      const response = await fetch(url, {
         method: request.method,
         headers: { "Content-Type": "application/json" },
         body: request.body ? JSON.stringify(request.body) : null,
       });
 
-      if (!response.ok) {
-        throw new Error(`Failed to process request: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`Failed: ${response.status}`);
 
-      console.log("Request synced successfully:", request);
+      // For POST requests, store the mapping
+      if (request.method === "POST" && request.body?.tempId) {
+        const responseData = await response.json();
+        idMap.set(request.body.tempId, responseData.id);
+      }
     } catch (error) {
-      console.error("Failed to sync request:", request, error);
-      return; // Stop syncing if a request fails
+      console.error("Sync error:", error);
     }
   }
 
-  // Clear the queue after successful sync
   clearOfflineQueue();
 };

@@ -18,12 +18,14 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ trackingRef }) => {
   const [videoLoaded, setVideoLoaded] = useState(false); // Track if the video has been loaded
   const { isOnline, isServerReachable } = useConnectionStatus(); // Use connection status
 
+  const SERVER_IP = process.env.NEXT_PUBLIC_SERVER_IP;
+
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Fetch the video tied to the profile on component load
   const fetchUploadedVideo = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/profile/get-video");
+      const response = await fetch(`http://${SERVER_IP}/api/profile/get-video`);
       if (response.ok) {
         const data = await response.json();
         if (data.videoPath) {
@@ -66,7 +68,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ trackingRef }) => {
       formData.append("video", selectedVideo);
   
       try {
-        const response = await fetch("http://localhost:5000/api/profile/upload-video", {
+        const response = await fetch(`http://${SERVER_IP}/api/profile/upload-video`, {
           method: "POST",
           body: formData,
         });
@@ -95,7 +97,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ trackingRef }) => {
   const handleDownloadVideo = () => {
     if (uploadedVideoUrl) {
       const link = document.createElement("a");
-      link.href = `http://localhost:5000${uploadedVideoUrl}`;
+      link.href = `http://${SERVER_IP}${uploadedVideoUrl}`;
       link.download = "favorite-concert-video.mp4"; // Default download name
       link.click();
     }
@@ -137,7 +139,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ trackingRef }) => {
         {uploadedVideoUrl && (
           <div className="uploaded-video">
             <video controls width="100%">
-              <source src={`http://localhost:5000${uploadedVideoUrl}`} type="video/mp4" />
+              <source src={`http://${SERVER_IP}${uploadedVideoUrl}`} type="video/mp4" />
               Your browser does not support the video tag.
             </video>
           </div>

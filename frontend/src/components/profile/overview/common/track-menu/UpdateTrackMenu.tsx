@@ -1,18 +1,6 @@
 import React, { useState, useEffect } from "react";
 import TrackMenu from "./TrackMenu";
-
-interface Song {
-  id: number;
-  title: string;
-  artist: string;
-  album: string;
-  genre: string;
-  hour: string;
-  minute: string;
-  day: string;
-  month: string;
-  year: string;
-}
+import { Song } from "../../../../../../../shared/types/song"; 
 
 interface UpdateTrackMenuProps {
   song: Song;

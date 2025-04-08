@@ -381,16 +381,17 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
     
       try {
         if (!isOnline || !isServerReachable) {
-          // Add to offline queue
+          
+          const tempId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
           addToOfflineQueue({
             method: "POST",
             url: `http://${SERVER_IP}/api/songs`,
-            body: formattedSong,
+            body: { ...formattedSong, tempId }, // Include both tempId and id
           });
     
           // Reflect changes in the frontend (temporary id for offline mode)
           setSongs((prevSongs) => {
-            const updatedSongs = [...prevSongs, { ...formattedSong, id: Date.now() }];
+            const updatedSongs = [...prevSongs, { ...formattedSong, id: tempId }];
             const filteredSongs = filterSongs(
               updatedSongs,
               selectedYear
@@ -679,10 +680,10 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
                 genre={song.genre}
                 dateListened={`${song.hour}:${song.minute}, ${song.day}/${song.month}/${song.year}`}
                 onUpdate={() => handleOpenUpdateMenu(song)}
-                onDelete={() => handleDeleteSong(song.id)}
+                onDelete={() => handleDeleteSong(Number(song.id))}
                 hrColor={hrColor}
                 isMenuOpen={openMenuId === song.id}
-                onMenuToggle={() => handleMenuToggle(song.id)}
+                onMenuToggle={() => handleMenuToggle(Number(song.id))}
                 onMenuClose={handleMenuClose}
               />
             );
@@ -719,7 +720,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
             error={error}
             successMessage={successMessage}
             onClose={handleCloseUpdateMenu}
-            onSubmit={(updatedSong) => handleUpdateSong(selectedSong.id, updatedSong)}
+            onSubmit={(updatedSong) => handleUpdateSong(Number(selectedSong.id), updatedSong)}
           />
         )}
       </div>
