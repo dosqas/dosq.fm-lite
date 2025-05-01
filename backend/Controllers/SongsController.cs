@@ -8,9 +8,10 @@ namespace backend.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class SongsController(AppDbContext context) : ControllerBase
+public class SongsController(AppDbContext context, Services.WebSocketManager webSocketManager) : ControllerBase
 {
     private readonly AppDbContext _context = context;
+    private readonly Services.WebSocketManager _webSocketManager = webSocketManager;
 
     // GET: /songs
     [HttpGet]
@@ -21,7 +22,7 @@ public class SongsController(AppDbContext context) : ControllerBase
         try
         {
             // Fetch all songs from the database
-            var songs = _context.Songs.Include(s => s.Artist).AsQueryable();
+            var songs = _context.Songs.Include(s => s.Artist).ToList();
 
             // Apply filtering and sorting (implement your logic here)
             var filteredSongs = SongUtils.FilterAndSortSongs(songs, from, rangetype);
@@ -51,15 +52,15 @@ public class SongsController(AppDbContext context) : ControllerBase
             }
 
             // Fetch songs with pagination
-            var query = _context.Songs.Include(s => s.Artist);
-            var total = await query.CountAsync();
-            var songs = query
+            var songs = _context.Songs.Include(s => s.Artist);
+            var total = await songs.CountAsync();
+            var paginatedSongs = songs
                 .Skip((page - 1) * limit)
                 .Take(limit)
-                .AsQueryable();
+                .ToList();
 
             // Apply filtering and sorting (implement your logic here)
-            var filteredSongs = SongUtils.FilterAndSortSongs(songs, from, rangetype);
+            var filteredSongs = SongUtils.FilterAndSortSongs(paginatedSongs, from, rangetype);
 
             // Check if there are more songs to load
             var hasMore = page * limit < total;
@@ -118,6 +119,38 @@ public class SongsController(AppDbContext context) : ControllerBase
         {
             Console.Error.WriteLine($"Error adding song: {ex.Message}");
             return StatusCode(500, "Internal Server Error");
+        }
+    }
+
+    // POST: /songs/start-auto-generation
+    [HttpPost("start-auto-generation")]
+    public async Task<IActionResult> StartAutoGeneration()
+    {
+        try
+        {
+            await _webSocketManager.StartAutoGenerationAsync();
+            return Ok(new { message = "Auto-generation started" });
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error starting auto-generation: {ex.Message}");
+            return StatusCode(500, new { error = "Failed to start auto-generation" });
+        }
+    }
+
+    // POST: /songs/stop-auto-generation
+    [HttpPost("stop-auto-generation")]
+    public IActionResult StopAutoGeneration()
+    {
+        try
+        {
+            _webSocketManager.StopAutoGeneration();
+            return Ok(new { message = "Auto-generation stopped" });
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error stopping auto-generation: {ex.Message}");
+            return StatusCode(500, new { error = "Failed to stop auto-generation" });
         }
     }
 
@@ -184,15 +217,5 @@ public class SongsController(AppDbContext context) : ControllerBase
             Console.Error.WriteLine($"Error deleting song: {ex.Message}");
             return StatusCode(500, "Internal Server Error");
         }
-    }
-
-    // OPTIONS: /songs
-    [HttpOptions]
-    public IActionResult HandleOptions()
-    {
-        Response.Headers.Append("Access-Control-Allow-Origin", "*");
-        Response.Headers.Append("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-        Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Authorization");
-        return NoContent();
     }
 }
