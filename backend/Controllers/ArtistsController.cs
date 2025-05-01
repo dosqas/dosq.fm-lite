@@ -20,20 +20,22 @@ public class ArtistsController : ControllerBase
     // GET: /artists
     [HttpGet]
     public async Task<IActionResult> GetArtists(
-        [FromQuery] string? name = null,
         [FromQuery] int? minSongs = null,
         [FromQuery] int? maxSongs = null)
     {
         try
         {
-            // Base query
-            var query = _context.Artists.Include(a => a.Songs).AsQueryable();
+            // Fetch all artists from the database
+            var artists = await _context.Artists.Include(a => a.Songs).ToListAsync();
 
-            // Apply filtering and sorting
-            query = ArtistUtils.FilterAndSortArtists(query, name, minSongs, maxSongs);
+            // Apply filtering and sorting in memory
+            artists = ArtistUtils.FilterAndSortArtists(artists, minSongs, maxSongs);
 
-            // Execute the query and fetch results
-            var artists = await query.ToListAsync();
+            // Return the result
+            if (artists == null || artists.Count == 0)
+            {
+                return Ok(new List<Artist>()); // Return an empty list with 200 OK
+            }
 
             return Ok(artists);
         }
@@ -62,22 +64,27 @@ public class ArtistsController : ControllerBase
             }
 
             // Fetch artists with pagination
-            var query = _context.Artists.Include(a => a.Songs).AsQueryable();
+            var artists = await _context.Artists.Include(a => a.Songs).ToListAsync();
 
             // Apply filtering and sorting
-            query = ArtistUtils.FilterAndSortArtists(query, name, minSongs, maxSongs);
+            artists = ArtistUtils.FilterAndSortArtists(artists, minSongs, maxSongs);
 
             // Pagination
-            var total = await query.CountAsync();
-            var artists = await query
+            var total = artists.Count;
+            var paginatedArtists = artists
                 .Skip((page - 1) * limit)
                 .Take(limit)
-                .ToListAsync();
+                .ToList();
+
+            if (paginatedArtists == null || paginatedArtists.Count == 0)
+            {
+                return Ok(new List<Artist>()); // Return an empty list with 200 OK
+            }
 
             // Check if there are more artists to load
             var hasMore = page * limit < total;
 
-            return Ok(new { artists, hasMore });
+            return Ok(new { paginatedArtists, hasMore });
         }
         catch (Exception ex)
         {
