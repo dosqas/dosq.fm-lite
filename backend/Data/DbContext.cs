@@ -12,10 +12,14 @@ namespace backend.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Artist>()
-                .HasMany(a => a.Songs)
-                .WithOne(s => s.Artist)
-                .HasForeignKey(s => s.ArtistId);
+            base.OnModelCreating(modelBuilder);
+
+            // Configure cascade delete for Artist -> Songs relationship
+            modelBuilder.Entity<Song>()
+                .HasOne(s => s.Artist)
+                .WithMany(a => a.Songs)
+                .HasForeignKey(s => s.ArtistId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
