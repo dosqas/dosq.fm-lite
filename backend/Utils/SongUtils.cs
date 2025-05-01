@@ -4,48 +4,41 @@ namespace backend.Utils;
 
 public static class SongUtils
 {
-    // Public method to filter and sort songs
-    public static IQueryable<Song> FilterAndSortSongs(IQueryable<Song> songs, string? from, string? rangeType)
-    {
-        // Apply filtering
-        songs = FilterSongs(songs, from, rangeType);
-
-        // Apply sorting
-        songs = SortSongs(songs);
-
-        return songs;
-    }
-
-    // Private method to filter songs
-    private static IQueryable<Song> FilterSongs(IQueryable<Song> songs, string? from, string? rangeType)
+    /// <summary>
+    /// Filters and sorts songs based on the provided criteria.
+    /// </summary>
+    /// <param name="songs">The list of songs.</param>
+    /// <param name="from">The starting date for filtering (optional).</param>
+    /// <param name="rangeType">The range type for filtering (e.g., "year", "1month", "1day", "all").</param>
+    /// <returns>A filtered and sorted list of songs.</returns>
+    public static List<Song> FilterAndSortSongs(List<Song> songs, string? from, string? rangeType)
     {
         DateTime? fromDate = null;
 
         // Parse the 'from' date if provided
-        if (!string.IsNullOrEmpty(from))
+        if (!string.IsNullOrEmpty(from) && DateTime.TryParse(from, out var parsedDate))
         {
-            if (DateTime.TryParse(from, out var parsedDate))
-            {
-                fromDate = parsedDate;
-            }
+            fromDate = parsedDate;
         }
 
-        return songs.Where(song =>
-            fromDate == null || // No filtering if 'from' is not provided
-            (rangeType == "year" && song.DateListened.Year == fromDate.Value.Year) ||
-            (rangeType == "1month" && song.DateListened.Year == fromDate.Value.Year &&
-             song.DateListened.Month == fromDate.Value.Month) ||
-            (rangeType == "1day" && song.DateListened.Year == fromDate.Value.Year &&
-             song.DateListened.Month == fromDate.Value.Month &&
-             song.DateListened.Day == fromDate.Value.Day) ||
-            string.IsNullOrEmpty(rangeType) || rangeType == "all" && song.DateListened >= fromDate.Value
-        );
-    }
+        // Apply filtering
+        if (fromDate.HasValue)
+        {
+            songs = songs.Where(song =>
+                (rangeType == "year" && song.DateListened.Year == fromDate.Value.Year) ||
+                (rangeType == "1month" && song.DateListened.Year == fromDate.Value.Year &&
+                song.DateListened.Month == fromDate.Value.Month) ||
+                (rangeType == "1day" && song.DateListened.Year == fromDate.Value.Year &&
+                song.DateListened.Month == fromDate.Value.Month &&
+                song.DateListened.Day == fromDate.Value.Day) ||
+                (string.IsNullOrEmpty(rangeType) || rangeType == "all" && song.DateListened >= fromDate.Value))
+                .ToList();
+        }
 
-    // Private method to sort songs
-    private static IQueryable<Song> SortSongs(IQueryable<Song> songs)
-    {
-        return songs.OrderByDescending(song => song.DateListened);
+        // Apply sorting
+        songs = songs.OrderByDescending(song => song.DateListened).ToList();
+
+        return songs;
     }
 
     public static string? ValidateSong(Song song)
@@ -81,5 +74,44 @@ public static class SongUtils
         }
 
         return null; // No validation errors
+    }
+
+    public static Song GenerateRandomSong()
+    {
+        return new Song
+        {
+            Title = $"Random Song {DateTime.Now.Ticks}",
+            Album = $"Random Album {DateTime.Now.Ticks}",
+            DateListened = DateTime.Now,
+            Artist = new Artist { Name = $"Random Artist {DateTime.Now.Ticks}" }
+        };
+    }
+
+    public static object GroupSongs(List<Song> songs, string rangeType = "year")
+    {
+        return rangeType switch
+        {
+            "year" => songs.GroupBy(s => s.DateListened.Year).Select(g => new
+            {
+                Year = g.Key,
+                Songs = g.ToList()
+            }),
+            "month" => songs.GroupBy(s => new { s.DateListened.Year, s.DateListened.Month }).Select(g => new
+            {
+                g.Key.Year,
+                g.Key.Month,
+                Songs = g.ToList()
+            }),
+            "day" => songs.GroupBy(s => s.DateListened.Date).Select(g => new
+            {
+                Date = g.Key,
+                Songs = g.ToList()
+            }),
+            _ => songs.GroupBy(s => s.DateListened.Year).Select(g => new
+            {
+                Year = g.Key,
+                Songs = g.ToList()
+            })
+        };
     }
 }
