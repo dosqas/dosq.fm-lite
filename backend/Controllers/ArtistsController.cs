@@ -44,6 +44,12 @@ public class ArtistsController : ControllerBase
             Console.Error.WriteLine($"Error fetching artists: {ex.Message}");
             return StatusCode(500, "Internal Server Error");
         }
+        finally 
+        {
+            // Log the action for auditing purposes
+            var userId = GetAuthenticatedUserId();
+            await _loggingService.LogAction(userId, new LogEntry.ActionType.READ, new LogEntry.EntityType.Artist);
+        }
     }
 
     // GET: /artists/limited
@@ -51,10 +57,8 @@ public class ArtistsController : ControllerBase
     public async Task<IActionResult> GetLimitedArtists(
         [FromQuery] int limit = 15,
         [FromQuery] int page = 1,
-        [FromQuery] string? name = null,
         [FromQuery] int? minSongs = null,
-        [FromQuery] int? maxSongs = null,
-        [FromQuery] string? sort = null)
+        [FromQuery] int? maxSongs = null)
     {
         try
         {
@@ -91,6 +95,12 @@ public class ArtistsController : ControllerBase
             Console.Error.WriteLine($"Error fetching limited artists: {ex.Message}");
             return StatusCode(500, "Internal Server Error");
         }
+        finally 
+        {
+            // Log the action for auditing purposes
+            var userId = GetAuthenticatedUserId();
+            await _loggingService.LogAction(userId, new LogEntry.ActionType.READ, new LogEntry.EntityType.Artist);
+        }
     }
     
     // GET: /artists/{id}
@@ -111,6 +121,12 @@ public class ArtistsController : ControllerBase
         {
             Console.Error.WriteLine($"Error fetching artist: {ex.Message}");
             return StatusCode(500, "Internal Server Error");
+        }
+        finally 
+        {
+            // Log the action for auditing purposes
+            var userId = GetAuthenticatedUserId();
+            await _loggingService.LogAction(userId, new LogEntry.ActionType.READ, new LogEntry.EntityType.Artist);
         }
     }
 
@@ -135,6 +151,12 @@ public class ArtistsController : ControllerBase
         {
             Console.Error.WriteLine($"Error adding artist: {ex.Message}");
             return StatusCode(500, "Internal Server Error");
+        }
+        finally 
+        {
+            // Log the action for auditing purposes
+            var userId = GetAuthenticatedUserId();
+            await _loggingService.LogAction(userId, new LogEntry.ActionType.CREATE, new LogEntry.EntityType.Artist);
         }
     }
 
@@ -162,6 +184,12 @@ public class ArtistsController : ControllerBase
             Console.Error.WriteLine($"Error updating artist: {ex.Message}");
             return StatusCode(500, "Internal Server Error");
         }
+        finally 
+        {
+            // Log the action for auditing purposes
+            var userId = GetAuthenticatedUserId();
+            await _loggingService.LogAction(userId, new LogEntry.ActionType.UPDATE, new LogEntry.EntityType.Artist);
+        }
     }
 
     // DELETE: /artists/{id}
@@ -187,6 +215,12 @@ public class ArtistsController : ControllerBase
         {
             Console.Error.WriteLine($"Error deleting artist: {ex.Message}");
             return StatusCode(500, "Internal Server Error");
+        }
+        finally 
+        {
+            // Log the action for auditing purposes
+            var userId = GetAuthenticatedUserId();
+            await _loggingService.LogAction(userId, new LogEntry.ActionType.DELETE, new LogEntry.EntityType.Artist);
         }
     }
 }
