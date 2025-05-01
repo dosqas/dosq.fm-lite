@@ -4,48 +4,32 @@ namespace backend.Utils;
 
 public static class ArtistUtils
 {
-    public static IQueryable<Artist> FilterAndSortArtists(
-        IQueryable<Artist> query,
-        string? name,
+    /// <summary>
+    /// Filters and sorts artists based on the number of songs.
+    /// </summary>
+    /// <param name="artists">The list of artists to filter and sort.</param>
+    /// <param name="minSongs">Minimum number of songs (optional).</param>
+    /// <param name="maxSongs">Maximum number of songs (optional).</param>
+    /// <returns>A filtered and sorted list of artists.</returns>
+    public static List<Artist> FilterAndSortArtists(
+        List<Artist> artists,
         int? minSongs,
         int? maxSongs)
     {
         // Apply filtering
-        query = FilterArtists(query, name, minSongs, maxSongs);
-
-        // Apply sorting
-        query = SortArtistsBySongCount(query);
-
-        return query;
-    }
-
-    private static IQueryable<Artist> FilterArtists(
-        IQueryable<Artist> query,
-        string? name,
-        int? minSongs,
-        int? maxSongs)
-    {
-        if (!string.IsNullOrEmpty(name))
-        {
-            query = query.Where(a => a.Name.Contains(name));
-        }
-
         if (minSongs.HasValue)
         {
-            query = query.Where(a => a.Songs != null && a.Songs.Count >= minSongs.Value);
+            artists = artists.Where(a => a.Songs != null && a.Songs.Count >= minSongs.Value).ToList();
         }
 
         if (maxSongs.HasValue)
         {
-            query = query.Where(a => a.Songs != null && a.Songs.Count <= maxSongs.Value);
+            artists = artists.Where(a => a.Songs != null && a.Songs.Count <= maxSongs.Value).ToList();
         }
 
-        return query;
-    }
+        // Apply sorting
+        artists = artists.OrderBy(a => a.Songs != null ? a.Songs.Count : 0).ToList();
 
-    private static IQueryable<Artist> SortArtistsBySongCount(
-        IQueryable<Artist> query)
-    {
-        return query.OrderBy(a => a.Songs != null ? a.Songs.Count : 0);
+        return artists;
     }
 }
