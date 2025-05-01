@@ -18,14 +18,21 @@ yarn-error.log*
 /.next/          # Next.js build output
 /out/            # Next.js static export output
 /build           # General build output (e.g., for backend)
+bin/             # ASP.NET Core build output
+obj/             # ASP.NET Core intermediate build output
 
 # Ignore test coverage reports
 /coverage
+TestResults/     # ASP.NET Core test results
 
 # Ignore environment files
 .env
 .env.local
 .env.*.local
+appsettings.Development.json
+appsettings.Local.json
+appsettings.*.json
+secrets.json
 
 # Ignore OS-specific files
 .DS_Store
@@ -47,6 +54,8 @@ logs/
 # Ignore backend-specific files (if applicable)
 backend/node_modules/
 backend/dist/
+backend/bin/
+backend/obj/
 
 # Ignore frontend-specific files (if applicable)
 frontend/node_modules/
@@ -57,6 +66,27 @@ frontend/out/
 frontend/coverage/
 backend/coverage/
 
+# Ignore database files
+*.mdf
+*.ldf
+*.sqlite
+*.db
+
+# Ignore publish output
+wwwroot/
+publish/
+out/
+
+# Ignore temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+
+# Ignore backend uploads
 backend/uploads/videos/*
 !backend/uploads/videos/.gitkeep
 backend/uploads/videos/profile-video.mp4
+
+# Ignore old backend
+oldBackend/

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import TrackMenu from "./TrackMenu";
-import { Song } from "../../../../../../../shared/types/song"; // Adjust the import path as necessary
+import { Song } from "../../../../../../../shared/entities/song"; // Adjust the import path as necessary
 
 interface UpdateTrackMenuProps {
   song: Song;

@@ -1,4 +1,4 @@
-import { Song } from "../types/song";
+import { Song } from "../entities/song";
 
 export const sortSongs = (songs: Song[]) => {
     return songs.sort((a, b) => {``

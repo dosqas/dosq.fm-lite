@@ -1,5 +1,6 @@
 import React, { useState, forwardRef, useImperativeHandle, useRef, useEffect } from "react";
-import { Song } from "@shared/types/song";
+import { Song } from "@shared/entities/song";
+import { Genre } from "@shared/entities/genre";
 import SongCard from "./SongCard";
 import UpdateTrackMenu from "./track-menu/UpdateTrackMenu";
 import AddTrackMenu from "./track-menu/AddTrackMenu";
@@ -117,8 +118,8 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
 
         // Append only unique songs to the list
         setSongs((prevSongs) => {
-          const songIds = new Set(prevSongs.map((song) => song.id)); // Track existing song IDs
-          const uniqueSongs = newSongs.filter((song: Song) => !songIds.has(song.id)); // Filter out duplicates
+          const songIds = new Set(prevSongs.map((song) => song.song_id)); // Track existing song IDs
+          const uniqueSongs = newSongs.filter((song: Song) => !songIds.has(song.song_id)); // Filter out duplicates
           const mergedSongs = [...prevSongs, ...uniqueSongs]; // Merge existing and fetched songs
           return sortSongs(mergedSongs); // Sort the merged list
         });
@@ -315,7 +316,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
     const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
 
     const [formData, setFormData] = useState<Song>({
-      id: 0,
+      song_id: 0,
       albumCover: "/images/vinyl-icon.svg",
       title: "",
       artist: "",
@@ -435,10 +436,10 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
         setSongs((prevSongs) => {
           const updatedSongs = prevSongs.map((song) => {
             // Check if the song has a temporary ID
-            if (typeof song.id === "string" && song.id.startsWith("temp_")) {
+            if (typeof song.song_id === "string" && song.song_id.startsWith("temp_")) {
               // Replace the temporary ID with the real ID from the newSong
               const realId = newSong.id; // Assuming newSong contains the real ID
-              if (song.id === newSong.tempId) {
+              if (song.song_id === newSong.tempId) {
                 return { ...song, id: realId }; // Replace tempId with real ID
               }
             }
@@ -520,7 +521,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
           setSongs((prevSongs) => {
             // Update the song with the matching ID
             const updatedSongs = prevSongs.map((song) =>
-              song.id === id ? { ...song, ...formattedSong } : song
+              song.song_id === id ? { ...song, ...formattedSong } : song
             );
           
             // Apply filtering based on the selected filters
@@ -565,7 +566,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
     
         setSongs((prevSongs) => {
           const updatedSongs = prevSongs.map((song) =>
-            song.id === id ? { ...song, ...updatedSongData } : song
+            song.song_id === id ? { ...song, ...updatedSongData } : song
           );
           const filteredSongs = filterSongs(
             updatedSongs,
@@ -607,7 +608,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
           // Reflect changes in the frontend
           setSongs((prevSongs) => {
             // Remove the song with the matching ID
-            const updatedSongs = prevSongs.filter((song) => song.id !== id);
+            const updatedSongs = prevSongs.filter((song) => song.song_id !== id);
           
             // Apply filtering based on the selected filters
             const filteredSongs = filterSongs(
@@ -645,7 +646,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
         }
     
         setSongs((prevSongs) => {
-          const updatedSongs = prevSongs.filter((song) => song.id !== id);
+          const updatedSongs = prevSongs.filter((song) => song.song_id !== id);
           const filteredSongs = filterSongs(
             updatedSongs,
             selectedYear
@@ -698,7 +699,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
     
             return (
               <SongCard
-                key={song.id}
+                key={song.song_id}
                 albumCover={song.albumCover}
                 title={song.title}
                 artist={song.artist}
@@ -706,10 +707,10 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
                 genre={song.genre}
                 dateListened={`${song.hour}:${song.minute}, ${song.day}/${song.month}/${song.year}`}
                 onUpdate={() => handleOpenUpdateMenu(song)}
-                onDelete={() => handleDeleteSong(song.id)}
+                onDelete={() => handleDeleteSong(song.song_id)}
                 hrColor={hrColor}
-                isMenuOpen={openMenuId === song.id}
-                onMenuToggle={() => handleMenuToggle(song.id)}
+                isMenuOpen={openMenuId === song.song_id}
+                onMenuToggle={() => handleMenuToggle(song.song_id)}
                 onMenuClose={handleMenuClose}
               />
             );
@@ -746,7 +747,7 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
             error={error}
             successMessage={successMessage}
             onClose={handleCloseUpdateMenu}
-            onSubmit={(updatedSong) => handleUpdateSong(selectedSong.id, updatedSong)}
+            onSubmit={(updatedSong) => handleUpdateSong(selectedSong.song_id, updatedSong)}
           />
         )}
       </div>

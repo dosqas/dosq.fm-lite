@@ -1,8 +1,10 @@
+import { Genre } from "../../shared/entities/genre";
+
 export const validateForm = (formData: {
-  title: string;
+  title: string | undefined;
   artist: string;
   album: string;
-  genre: string;
+  genre: Genre | undefined; // Update genre to match the new structure
   hour: string;
   minute: string;
   day: string;
