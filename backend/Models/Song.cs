@@ -15,7 +15,12 @@ namespace backend.Models
         public required string Album { get; set; }
 
         [Required]
-        public required DateTime DateListened { get; set; }
+        public DateTime DateListened
+        {
+            get => _dateListened;
+            set => _dateListened = DateTime.SpecifyKind(value, DateTimeKind.Utc);
+        }
+        private DateTime _dateListened;
 
         // Foreign key for Artist
         [ForeignKey("Artist")]
@@ -23,5 +28,11 @@ namespace backend.Models
         
         [Required]
         public required Artist Artist { get; set; }
+
+        [ForeignKey("User")]
+        public int UserId { get; set; }
+
+        [Required]
+        public required User User { get; set; } = null!;
     }
 }
