@@ -3,36 +3,51 @@ using Microsoft.EntityFrameworkCore;
 using backend.Data;
 using backend.Models;
 using backend.Utils;
+using System.Security.Claims;
+using Microsoft.Extensions.Configuration.UserSecrets;
 
 namespace backend.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class SongsController(AppDbContext context, Services.WebSocketManager webSocketManager) : ControllerBase
+public class SongsController(AppDbContext context, Services.WebSocketManager webSocketManager, LoggingService loggingService) : ControllerBase
 {
     private readonly AppDbContext _context = context;
     private readonly Services.WebSocketManager _webSocketManager = webSocketManager;
 
+    private readonly LoggingService _loggingService = loggingService;
+
     // GET: /songs
     [HttpGet]
-    public Task<IActionResult> GetSongs(
-        [FromQuery] string? from, 
+    public async Task<IActionResult> GetSongs(
+        [FromQuery] string? from,
         [FromQuery] string? rangetype)
     {
+        var userId = 0;
         try
         {
-            // Fetch all songs from the database
-            var songs = _context.Songs.Include(s => s.Artist).ToList();
+            userId = UserUtils.GetAuthenticatedUserId(User);
 
-            // Apply filtering and sorting (implement your logic here)
+            // Fetch all songs for the authenticated user
+            var songs = await _context.Songs
+                .Include(s => s.Artist)
+                .Where(s => s.UserId == userId)
+                .ToListAsync();
+
+            // Apply filtering and sorting
             var filteredSongs = SongUtils.FilterAndSortSongs(songs, from, rangetype);
 
-            return Task.FromResult<IActionResult>(Ok(filteredSongs));
+            return Ok(filteredSongs);
         }
         catch (Exception ex)
         {
             Console.Error.WriteLine($"Error fetching songs: {ex.Message}");
-            return Task.FromResult<IActionResult>(StatusCode(500, "Internal Server Error"));
+            return StatusCode(500, "Internal Server Error");
+        }
+        finally 
+        {
+            // Log the action for auditing purposes
+            await _loggingService.LogAction(userId, LogEntry.ActionType.READ, LogEntry.EntityType.Song);
         }
     }
 
@@ -44,6 +59,7 @@ public class SongsController(AppDbContext context, Services.WebSocketManager web
         [FromQuery] string? from = null,
         [FromQuery] string? rangetype = null)
     {
+        var userId = 0;
         try
         {
             if (limit <= 0 || page <= 0)
@@ -51,15 +67,20 @@ public class SongsController(AppDbContext context, Services.WebSocketManager web
                 return BadRequest("Invalid limit or page parameter");
             }
 
-            // Fetch songs with pagination
-            var songs = _context.Songs.Include(s => s.Artist);
-            var total = await songs.CountAsync();
-            var paginatedSongs = songs
+            userId = UserUtils.GetAuthenticatedUserId(User);
+
+            // Fetch songs for the authenticated user with pagination
+            var songsQuery = _context.Songs
+                .Include(s => s.Artist)
+                .Where(s => s.UserId == userId);
+
+            var total = await songsQuery.CountAsync();
+            var paginatedSongs = await songsQuery
                 .Skip((page - 1) * limit)
                 .Take(limit)
-                .ToList();
+                .ToListAsync();
 
-            // Apply filtering and sorting (implement your logic here)
+            // Apply filtering and sorting
             var filteredSongs = SongUtils.FilterAndSortSongs(paginatedSongs, from, rangetype);
 
             // Check if there are more songs to load
@@ -72,16 +93,27 @@ public class SongsController(AppDbContext context, Services.WebSocketManager web
             Console.Error.WriteLine($"Error fetching limited songs: {ex.Message}");
             return StatusCode(500, "Internal Server Error");
         }
+        finally 
+        {
+            // Log the action for auditing purposes
+            await _loggingService.LogAction(userId, LogEntry.ActionType.READ, LogEntry.EntityType.Song);
+        }
     }
 
     // GET: /songs/{id}
     [HttpGet("{id}")]
     public async Task<IActionResult> GetSongById(int id)
     {
+        var userId = 0;
         try
         {
-            // Find the song by ID
-            var song = await _context.Songs.Include(s => s.Artist).FirstOrDefaultAsync(s => s.SongId == id);
+            userId = UserUtils.GetAuthenticatedUserId(User);
+
+            // Find the song by ID for the authenticated user
+            var song = await _context.Songs
+                .Include(s => s.Artist)
+                .FirstOrDefaultAsync(s => s.SongId == id && s.UserId == userId);
+
             if (song == null)
             {
                 return NotFound(new { error = "Song not found" });
@@ -94,15 +126,26 @@ public class SongsController(AppDbContext context, Services.WebSocketManager web
             Console.Error.WriteLine($"Error fetching song by ID: {ex.Message}");
             return StatusCode(500, "Internal Server Error");
         }
+        finally 
+        {
+            // Log the action for auditing purposes
+            await _loggingService.LogAction(userId, LogEntry.ActionType.READ, LogEntry.EntityType.Song);
+        }
     }
 
     // POST: /songs
     [HttpPost]
     public async Task<IActionResult> AddSong([FromBody] Song newSong)
     {
+        var userId = 0;
         try
         {
-            // Validate the incoming song data (implement your validation logic here)
+            userId = UserUtils.GetAuthenticatedUserId(User);
+
+            // Associate the song with the authenticated user
+            newSong.UserId = userId;
+
+            // Validate the incoming song data
             var validationError = SongUtils.ValidateSong(newSong);
             if (!string.IsNullOrEmpty(validationError))
             {
@@ -119,6 +162,11 @@ public class SongsController(AppDbContext context, Services.WebSocketManager web
         {
             Console.Error.WriteLine($"Error adding song: {ex.Message}");
             return StatusCode(500, "Internal Server Error");
+        }
+        finally 
+        {
+            // Log the action for auditing purposes
+            await _loggingService.LogAction(userId, LogEntry.ActionType.CREATE, LogEntry.EntityType.Song);
         }
     }
 
@@ -158,10 +206,16 @@ public class SongsController(AppDbContext context, Services.WebSocketManager web
     [HttpPatch("{id}")]
     public async Task<IActionResult> UpdateSong(int id, [FromBody] Song partialUpdate)
     {
+        var userId = 0;
         try
         {
-            // Find the song by ID
-            var song = await _context.Songs.Include(s => s.Artist).FirstOrDefaultAsync(s => s.SongId == id);
+            userId = UserUtils.GetAuthenticatedUserId(User);
+
+            // Find the song by ID for the authenticated user
+            var song = await _context.Songs
+                .Include(s => s.Artist)
+                .FirstOrDefaultAsync(s => s.SongId == id && s.UserId == userId);
+
             if (song == null)
             {
                 return NotFound(new { error = "Song not found" });
@@ -191,16 +245,25 @@ public class SongsController(AppDbContext context, Services.WebSocketManager web
             Console.Error.WriteLine($"Error updating song: {ex.Message}");
             return StatusCode(500, "Internal Server Error");
         }
+        finally 
+        {
+            // Log the action for auditing purposes
+            await _loggingService.LogAction(userId, LogEntry.ActionType.UPDATE, LogEntry.EntityType.Song);
+        }
     }
 
     // DELETE: Delete a song by ID
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteSong(int id)
     {
+        var userId = 0;
         try
         {
-            // Find the song by ID
-            var song = await _context.Songs.FirstOrDefaultAsync(s => s.SongId == id);
+            userId = UserUtils.GetAuthenticatedUserId(User);
+
+            // Find the song by ID for the authenticated user
+            var song = await _context.Songs.FirstOrDefaultAsync(s => s.SongId == id && s.UserId == userId);
+
             if (song == null)
             {
                 return NotFound(new { error = "Song not found" });
@@ -216,6 +279,11 @@ public class SongsController(AppDbContext context, Services.WebSocketManager web
         {
             Console.Error.WriteLine($"Error deleting song: {ex.Message}");
             return StatusCode(500, "Internal Server Error");
+        }
+        finally 
+        {
+            // Log the action for auditing purposes
+            await _loggingService.LogAction(userId, LogEntry.ActionType.DELETE, LogEntry.EntityType.Song);
         }
     }
 }
