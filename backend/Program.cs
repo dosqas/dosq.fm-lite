@@ -1,4 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer; 
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using backend.Data;
 
 bool SEED_DATABASE = false; // Set to true to seed the database
@@ -21,7 +24,7 @@ if (MONITORING_ENABLED)
 {
     // Start monitoring user activity in a background task
     var monitoringService = app.Services.GetRequiredService<MonitoringService>();
-    Task.Run(() => monitoringService.MonitorUserActivity());
+    await Task.Run(() => monitoringService.MonitorUserActivity());
 }
 else
     Console.WriteLine("Monitoring is disabled.");
