@@ -22,12 +22,12 @@ else
 
 if (MONITORING_ENABLED)
 {
-    // Start monitoring user activity in a background task
-    var monitoringService = app.Services.GetRequiredService<MonitoringService>();
-    await Task.Run(() => monitoringService.MonitorUserActivity());
+    Console.WriteLine("Monitoring is enabled.");
 }
 else
+{
     Console.WriteLine("Monitoring is disabled.");
+}
 
 // Configure middleware
 ConfigureMiddleware(app);
@@ -55,6 +55,9 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
     // Register Logging and Monitoring services
     builder.Services.AddScoped<LoggingService>();
     builder.Services.AddScoped<MonitoringService>();
+
+    // Register the MonitoringHostedService as a hosted service
+    builder.Services.AddHostedService<MonitoringHostedService>();
 
     // Add controllers
     services.AddControllers();
