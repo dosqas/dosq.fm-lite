@@ -1,4 +1,6 @@
 using backend.Models;
+using System.Security.Claims;
+
 
 namespace backend.Utils;
 
@@ -83,7 +85,8 @@ public static class SongUtils
             Title = $"Random Song {DateTime.Now.Ticks}",
             Album = $"Random Album {DateTime.Now.Ticks}",
             DateListened = DateTime.Now,
-            Artist = new Artist { Name = $"Random Artist {DateTime.Now.Ticks}" }
+            Artist = new Artist { Name = $"Random Artist {DateTime.Now.Ticks}" },
+            User = new User { Username = $"Random User {DateTime.Now.Ticks}", PasswordHash = "hashedpassword", Role = User.UserRole.User }
         };
     }
 
@@ -114,4 +117,5 @@ public static class SongUtils
             })
         };
     }
+    
 }
