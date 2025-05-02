@@ -2,6 +2,7 @@ using backend.Data;
 using backend.Models;
 using backend.Utils;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -17,9 +18,9 @@ public class OfflineQueueController : ControllerBase
     // Request model to represent the incoming requests
     public class RequestModel
     {
-        public string Method { get; set; }
-        public string Url { get; set; }
-        public Song Body { get; set; }
+        public required string Method { get; set; }
+        public required string Url { get; set; }
+        public required Song Body { get; set; }
     }
 
     [HttpPost("process")]
@@ -32,18 +33,24 @@ public class OfflineQueueController : ControllerBase
 
         try
         {
+            var userId = UserUtils.GetAuthenticatedUserId(User);
+            if (userId == 0)
+            {
+                return Unauthorized(new { error = "User not authenticated" });
+            }
+
             foreach (var request in requests)
             {
                 switch (request.Method.ToUpper())
                 {
                     case "POST":
-                        await HandlePostRequest(request.Url, request.Body);
+                        await HandlePostRequest(userId, request.Body);
                         break;
                     case "PATCH":
-                        await HandlePatchRequest(request.Url, request.Body);
+                        await HandlePatchRequest(userId, request.Url, request.Body);
                         break;
                     case "DELETE":
-                        await HandleDeleteRequest(request.Url);
+                        await HandleDeleteRequest(userId, request.Url);
                         break;
                     default:
                         Console.WriteLine($"Unsupported method: {request.Method}");
@@ -60,9 +67,9 @@ public class OfflineQueueController : ControllerBase
         }
     }
 
-    private async Task HandlePostRequest(string url, Song body)
+    private async Task HandlePostRequest(int userId, Song body)
     {
-        Console.WriteLine($"Processing POST request to {url} with body: {body}");
+        Console.WriteLine($"Processing POST request for user {userId} with body: {body}");
 
         // Validate the new song
         var validationError = SongUtils.ValidateSong(body);
@@ -71,24 +78,27 @@ public class OfflineQueueController : ControllerBase
             throw new Exception(validationError);
         }
 
+        // Associate the song with the authenticated user
+        body.UserId = userId;
+
         // Add the new song to the database
         _context.Songs.Add(body);
         await _context.SaveChangesAsync();
 
-        Console.WriteLine($"Song added successfully with ID {body.SongId}.");
+        Console.WriteLine($"Song added successfully with ID {body.SongId} for user {userId}.");
     }
 
-    private async Task HandlePatchRequest(string url, Song body)
+    private async Task HandlePatchRequest(int userId, string url, Song body)
     {
-        Console.WriteLine($"Processing PATCH request to {url} with body: {body}");
+        Console.WriteLine($"Processing PATCH request for user {userId} with body: {body}");
 
-        // Extract the ID from the URL (assuming the ID is part of the URL)
+        // Extract the ID from the URL
         var id = ExtractIdFromUrl(url);
 
-        var song = await _context.Songs.FindAsync(id);
+        var song = await _context.Songs.FirstOrDefaultAsync(s => s.SongId == id && s.UserId == userId);
         if (song == null)
         {
-            throw new Exception("Song not found");
+            throw new Exception("Song not found or does not belong to the user");
         }
 
         // Update the song
@@ -105,26 +115,26 @@ public class OfflineQueueController : ControllerBase
 
         await _context.SaveChangesAsync();
 
-        Console.WriteLine($"Song with ID {id} updated successfully.");
+        Console.WriteLine($"Song with ID {id} updated successfully for user {userId}.");
     }
 
-    private async Task HandleDeleteRequest(string url)
+    private async Task HandleDeleteRequest(int userId, string url)
     {
-        Console.WriteLine($"Processing DELETE request to {url}");
+        Console.WriteLine($"Processing DELETE request for user {userId}");
 
-        // Extract the ID from the URL (assuming the ID is part of the URL)
+        // Extract the ID from the URL
         var id = ExtractIdFromUrl(url);
 
-        var song = await _context.Songs.FindAsync(id);
+        var song = await _context.Songs.FirstOrDefaultAsync(s => s.SongId == id && s.UserId == userId);
         if (song == null)
         {
-            throw new Exception("Song not found");
+            throw new Exception("Song not found or does not belong to the user");
         }
 
         _context.Songs.Remove(song);
         await _context.SaveChangesAsync();
 
-        Console.WriteLine($"Song with ID {id} deleted successfully.");
+        Console.WriteLine($"Song with ID {id} deleted successfully for user {userId}.");
     }
 
     private int ExtractIdFromUrl(string url)
