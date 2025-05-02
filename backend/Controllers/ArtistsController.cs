@@ -11,10 +11,12 @@ namespace backend.Controllers;
 public class ArtistsController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly LoggingService _loggingService;
 
-    public ArtistsController(AppDbContext context)
+    public ArtistsController(AppDbContext context, LoggingService loggingService)
     {
         _context = context;
+        _loggingService = loggingService;
     }
 
     // GET: /artists
@@ -47,8 +49,8 @@ public class ArtistsController : ControllerBase
         finally 
         {
             // Log the action for auditing purposes
-            var userId = GetAuthenticatedUserId();
-            await _loggingService.LogAction(userId, new LogEntry.ActionType.READ, new LogEntry.EntityType.Artist);
+            var userId = UserUtils.GetAuthenticatedUserId(User);
+            await _loggingService.LogAction(userId, LogEntry.ActionType.READ, LogEntry.EntityType.Artist);
         }
     }
 
@@ -98,8 +100,8 @@ public class ArtistsController : ControllerBase
         finally 
         {
             // Log the action for auditing purposes
-            var userId = GetAuthenticatedUserId();
-            await _loggingService.LogAction(userId, new LogEntry.ActionType.READ, new LogEntry.EntityType.Artist);
+            var userId = UserUtils.GetAuthenticatedUserId(User);
+            await _loggingService.LogAction(userId, LogEntry.ActionType.READ, LogEntry.EntityType.Artist);
         }
     }
     
@@ -125,8 +127,8 @@ public class ArtistsController : ControllerBase
         finally 
         {
             // Log the action for auditing purposes
-            var userId = GetAuthenticatedUserId();
-            await _loggingService.LogAction(userId, new LogEntry.ActionType.READ, new LogEntry.EntityType.Artist);
+            var userId = UserUtils.GetAuthenticatedUserId(User);
+            await _loggingService.LogAction(userId, LogEntry.ActionType.READ, LogEntry.EntityType.Artist);
         }
     }
 
@@ -155,8 +157,8 @@ public class ArtistsController : ControllerBase
         finally 
         {
             // Log the action for auditing purposes
-            var userId = GetAuthenticatedUserId();
-            await _loggingService.LogAction(userId, new LogEntry.ActionType.CREATE, new LogEntry.EntityType.Artist);
+            var userId = UserUtils.GetAuthenticatedUserId(User);
+            await _loggingService.LogAction(userId, LogEntry.ActionType.CREATE, LogEntry.EntityType.Artist);
         }
     }
 
@@ -187,8 +189,8 @@ public class ArtistsController : ControllerBase
         finally 
         {
             // Log the action for auditing purposes
-            var userId = GetAuthenticatedUserId();
-            await _loggingService.LogAction(userId, new LogEntry.ActionType.UPDATE, new LogEntry.EntityType.Artist);
+            var userId = UserUtils.GetAuthenticatedUserId(User);
+            await _loggingService.LogAction(userId, LogEntry.ActionType.UPDATE, LogEntry.EntityType.Artist);
         }
     }
 
@@ -219,8 +221,8 @@ public class ArtistsController : ControllerBase
         finally 
         {
             // Log the action for auditing purposes
-            var userId = GetAuthenticatedUserId();
-            await _loggingService.LogAction(userId, new LogEntry.ActionType.DELETE, new LogEntry.EntityType.Artist);
+            var userId = UserUtils.GetAuthenticatedUserId(User);
+            await _loggingService.LogAction(userId, LogEntry.ActionType.DELETE, LogEntry.EntityType.Artist);
         }
     }
 }
