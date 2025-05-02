@@ -25,6 +25,8 @@ namespace backend.Models
         [Required]
         public required UserRole Role { get; set; } = UserRole.User; // "User" or "Admin"
 
+        public string? ProfileVideoPath { get; set; }
+
         // Relationships
         public ICollection<Song> Songs { get; set; } = new List<Song>();
     }
