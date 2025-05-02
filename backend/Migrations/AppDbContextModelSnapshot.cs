@@ -22,6 +22,58 @@ namespace backend.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("LogEntry", b =>
+                {
+                    b.Property<int>("LogEntryId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("LogEntryId"));
+
+                    b.Property<int>("Action")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Entity")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("LogEntryId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("LogEntries");
+                });
+
+            modelBuilder.Entity("MonitoredUser", b =>
+                {
+                    b.Property<int>("MonitoredUserId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MonitoredUserId"));
+
+                    b.Property<DateTime>("FlaggedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("MonitoredUserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("MonitoredUsers");
+                });
+
             modelBuilder.Entity("backend.Models.Artist", b =>
                 {
                     b.Property<int>("ArtistId")
@@ -61,11 +113,66 @@ namespace backend.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
                     b.HasKey("SongId");
 
-                    b.HasIndex("ArtistId");
+                    b.HasIndex("ArtistId")
+                        .HasDatabaseName("IX_Songs_ArtistId");
+
+                    b.HasIndex("DateListened")
+                        .HasDatabaseName("IX_Songs_DateListened");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Songs");
+                });
+
+            modelBuilder.Entity("backend.Models.User", b =>
+                {
+                    b.Property<int>("UserId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("UserId"));
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("LogEntry", b =>
+                {
+                    b.HasOne("backend.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("MonitoredUser", b =>
+                {
+                    b.HasOne("backend.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("backend.Models.Song", b =>
@@ -76,10 +183,23 @@ namespace backend.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("backend.Models.User", "User")
+                        .WithMany("Songs")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Artist");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("backend.Models.Artist", b =>
+                {
+                    b.Navigation("Songs");
+                });
+
+            modelBuilder.Entity("backend.Models.User", b =>
                 {
                     b.Navigation("Songs");
                 });
