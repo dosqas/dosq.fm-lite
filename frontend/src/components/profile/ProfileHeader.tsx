@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import Image from "next/legacy/image";
-import "../../../styles/profile/shared/profile-header.css";
-import { useConnectionStatus } from "../../../context/ConnectionStatusContext";
+import "@styles/profile/shared/profile-header.css";
+import { useConnectionStatus } from "@context/ConnectionStatusContext";
 
 interface ProfileHeaderProps {
   username: string | null;

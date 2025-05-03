@@ -2,9 +2,9 @@
 
 import React, { useState, useRef } from "react";
 import LibraryHeader from "./ProfileLibraryHeader";
-import ProfileSongsCol, { ProfileSongsColHandle } from "../overview/common/ProfileSongsCol";
+import ProfileSongsCol, { ProfileSongsColHandle } from "./ProfileSongsCol";
 import LibrarySidebar from "./ProfileLibrarySidebar";
-import "../../../styles/profile/library/profile-library-content.css";
+import "@styles/profile/library/profile-library-content.css";
 
 const ProfileLibraryContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"dosqs" | "artists" | "albums" | "tracks">("dosqs");

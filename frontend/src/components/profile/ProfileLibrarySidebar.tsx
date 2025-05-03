@@ -1,5 +1,4 @@
 import React, { useMemo, useRef, useEffect, useState } from "react";
-import { Song } from "@shared/types/song";
 import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,

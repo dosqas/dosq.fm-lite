@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useRef } from "react";
-import ProfileSongsCol, { ProfileSongsColHandle } from "./common/ProfileSongsCol";
-import ProfileOverviewSidebar from "../ProfileOverviewSidebar";
-import "../../../styles/profile/overview/profile-overview-content.css";
+import ProfileSongsCol, { ProfileSongsColHandle } from "./ProfileSongsCol";
+import ProfileOverviewSidebar from "./ProfileOverviewSidebar";
+import "@styles/profile/overview/profile-overview-content.css";
 
 const ProfileContent: React.FC = () => {
   const profileSongsColRef = useRef<ProfileSongsColHandle>(null);

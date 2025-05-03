@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState, useEffect, useRef, RefObject } from "react";
-import "../../../styles/profile/overview/profile-overview-sidebar.css";
-import { ProfileSongsColHandle } from "./common/ProfileSongsCol";
-import { useConnectionStatus } from "../../context/ConnectionStatusContext";
+import "@styles/profile/overview/profile-overview-sidebar.css";
+import { ProfileSongsColHandle } from "./ProfileSongsCol";
+import { useConnectionStatus } from "@context/ConnectionStatusContext";
 
 interface ProfileSidebarProps {
   trackingRef: RefObject<ProfileSongsColHandle | null>;
