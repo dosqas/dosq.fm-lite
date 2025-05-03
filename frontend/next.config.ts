@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,
-      "@shared": path.resolve(__dirname, "../shared"), // Map @shared to the shared folder
+      "@shared": path.resolve(__dirname, "../shared"),
     };
     return config;
   },
