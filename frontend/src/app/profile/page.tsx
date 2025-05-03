@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import ProfileHeader from "@/components/profile/overview/ProfileHeader";
-import ProfileOverviewContent from "@/components/profile/overview/ProfileOverviewContent";
-import "../../styles/profile/profile.css";
+import ProfileHeader from "@components/profile/ProfileHeader";
+import ProfileOverviewContent from "@components/profile/ProfileContent";
+import "@styles/profile/profile.css";
 import { useRouter } from "next/navigation";
-import { isLoggedIn, clearToken } from "../../utils/authUtils";
+import { isLoggedIn, clearToken } from "@utils/authUtils";
 
 const ProfilePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);

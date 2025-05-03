@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import "../../styles/login/loginpage.css";
-import { isLoggedIn, setToken } from "../../utils/authUtils"; // Import from your auth utils
+import "@styles/login/loginpage.css";
+import { isLoggedIn, setToken } from "@utils/authUtils";
 
 const LoginPage: React.FC = () => {
   const [username, setUsername] = useState("");
