@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import ProfileHeader from "@/components/profile/shared/ProfileHeader";
+import ProfileHeader from "@/components/profile/overview/ProfileHeader";
 import ProfileOverviewContent from "@/components/profile/overview/ProfileOverviewContent";
 import "../../styles/profile/profile.css";
 import { useRouter } from "next/navigation";
@@ -80,8 +80,8 @@ const ProfilePage: React.FC = () => {
   // Render the profile page if authenticated
   return (
     <div className="profile-page">
-      <div className="auth-controls" style={{ padding: "10px", background: "#f5f5f5", margin: "10px 0" }}>
-        <button onClick={handleLogout} className="logout-button">Logout</button>
+      <div className="auth-controls" style={{ background: "#313131", width: "100%", textAlign: "right", paddingRight: "0.65rem", paddingTop: "0.5rem" }}>
+        <button onClick={handleLogout} className="logout-button" style={{ background: "#f1f1f1", width: "5%"}}>Logout</button>
       </div>
       <ProfileHeader username={username} error={error} />
       <ProfileOverviewContent />
