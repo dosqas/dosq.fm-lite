@@ -12,6 +12,11 @@ import { addToOfflineQueue } from "@shared/offline/data/offlineQueue";
 import "../../../../styles/profile/overview/common/profile-songs-col.css";
 import { syncOfflineQueue } from "@shared/offline/utils/offlineQueueUtils";
 
+
+import { toggleAutoGeneration as toggleAutoGenerationService } from "@service/songService";
+import { fetchSongsLimited as fetchSongsLimitedService } from "@service/songService";
+import { connectWebSocket as connectWebSocketService } from "@service/songService";
+
 export interface ProfileSongsColHandle {
   openAddMenu: () => void;
   resetPage: () => void;
@@ -38,8 +43,6 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
 
     const { isOnline, isServerReachable } = useConnectionStatus();
     const [connectionStatus, setConnectionStatus] = useState("connecting");
-
-    const SERVER_IP = process.env.NEXT_PUBLIC_SERVER_IP;
 
     useEffect(() => {
       if (isOnline && isServerReachable) {
@@ -83,50 +86,27 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
       setIsLoading(true);
     
       try {
-        const queryParams = new URLSearchParams();
-        queryParams.append("page", page.toString());
-        queryParams.append("limit", itemsPerPage.toString());
+        const { songs: newSongs, hasMore: moreAvailable } = await fetchSongsLimitedService(
+          page,
+          itemsPerPage,
+          selectedYear,
+          selectedMonth,
+          selectedDay
+        );
     
-        if (!selectedYear) {
-          queryParams.append("from", "1900-01-01");
-          queryParams.append("rangetype", "all");
-        } else if (!selectedMonth) {
-          queryParams.append("from", `${selectedYear}-01-01`);
-          queryParams.append("rangetype", "year");
-        } else if (!selectedDay) {
-          queryParams.append("from", `${selectedYear}-${selectedMonth}-01`);
-          queryParams.append("rangetype", "1month");
-        } else {
-          queryParams.append(
-            "from",
-            `${selectedYear}-${selectedMonth.padStart(2, "0")}-${selectedDay.padStart(2, "0")}`
-          );
-          queryParams.append("rangetype", "1day");
-        }
-
-        console.log("Fetching songs with query params:", queryParams.toString());
-    
-        const response = await fetch(`http://${SERVER_IP}/api/songs/limited?${queryParams.toString()}`);
-
-        const result = await response.json();
-
-        // Extract songs and hasMore from the response
-        const { songs: newSongs, hasMore: moreAvailable } = result;
-
         console.log("Fetched songs:", newSongs);
         console.log("Updated hasMore:", moreAvailable);
-
-        // Append only unique songs to the list
+    
         setSongs((prevSongs) => {
-          const songIds = new Set(prevSongs.map((song) => song.song_id)); // Track existing song IDs
-          const uniqueSongs = newSongs.filter((song: Song) => !songIds.has(song.song_id)); // Filter out duplicates
-          const mergedSongs = [...prevSongs, ...uniqueSongs]; // Merge existing and fetched songs
-          return sortSongs(mergedSongs); // Sort the merged list
+          const songIds = new Set(prevSongs.map((song) => song.song_id));
+          const uniqueSongs = newSongs.filter((song) => !songIds.has(song.song_id));
+          const mergedSongs = [...prevSongs, ...uniqueSongs];
+          return sortSongs(mergedSongs);
         });
-
-        // Update the hasMore state
+    
         setHasMore(moreAvailable);
       } catch (error) {
+        console.error("Error fetching songs:", error);
       } finally {
         setIsLoading(false);
       }
@@ -169,142 +149,46 @@ const ProfileSongsCol = forwardRef<ProfileSongsColHandle, ProfileSongsColProps>(
 
     
     useEffect(() => {
-      let ws: WebSocket | null = null;
-      let retryCount = 0;
-      const maxRetries = 5;
-      const baseDelay = 1000;
-      let retryTimeout: NodeJS.Timeout | null = null;
+      const cleanup = connectWebSocketService(
+        SERVER_IP,
+        (message) => {
+          if (message.type === "NEW_SONG") {
+            const newSong = message.payload;
     
-      const connectWebSocket = () => {
-        setConnectionStatus(retryCount > 0 ? "retrying..." : "connecting");
-        
-        try {
-          ws = new WebSocket(`ws://${SERVER_IP}`);
-    
-          ws.onopen = () => {
-            console.log("WebSocket connected successfully");
-            setConnectionStatus("connected");
-            retryCount = 0;
-          };
-    
-
-          ws.onmessage = (event) => {
-            try {
-              const message = JSON.parse(event.data);
-
-              if (message.type === "NEW_SONG") {
-                const newSong = message.payload;
-
-                setSongs((prevSongs) => {
-                  // Combine the new song with the existing list
-                  const updatedSongs = [newSong, ...prevSongs];
-
-                  // Apply filtering based on the current filters
-                  const filteredSongs = filterSongs(
-                    updatedSongs,
-                    selectedYear
-                      ? selectedMonth
-                        ? selectedDay
-                          ? `${selectedYear}-${selectedMonth.padStart(2, "0")}-${selectedDay.padStart(2, "0")}`
-                          : `${selectedYear}-${selectedMonth.padStart(2, "0")}-01`
-                        : `${selectedYear}-01-01`
-                      : null,
-                    !selectedYear
-                      ? "all"
-                      : !selectedMonth
-                      ? "year"
-                      : !selectedDay
-                      ? "1month"
-                      : "1day"
-                  );
-
-                  // Sort the filtered songs
-                  return sortSongs(filteredSongs);
-                });
-              }
-            } catch (error) {
-              console.error("Failed to process WebSocket message:", error);
-            }
-          };
-    
-          ws.onclose = (event) => {
-            console.log("WebSocket closed:", {
-              code: event.code,
-              reason: event.reason,
-              wasClean: event.wasClean
+            setSongs((prevSongs) => {
+              const updatedSongs = [newSong, ...prevSongs];
+              const filteredSongs = filterSongs(
+                updatedSongs,
+                selectedYear
+                  ? selectedMonth
+                    ? selectedDay
+                      ? `${selectedYear}-${selectedMonth.padStart(2, "0")}-${selectedDay.padStart(2, "0")}`
+                      : `${selectedYear}-${selectedMonth.padStart(2, "0")}-01`
+                    : `${selectedYear}-01-01`
+                  : null,
+                !selectedYear
+                  ? "all"
+                  : !selectedMonth
+                  ? "year"
+                  : !selectedDay
+                  ? "1month"
+                  : "1day"
+              );
+              return sortSongs(filteredSongs);
             });
-            
-            if (!event.wasClean) {
-              scheduleReconnect();
-            }
-          };
-    
-        } catch (error) {
-          console.error("WebSocket initialization crashed:", error);
-          scheduleReconnect();
-        }
-      };
-    
-      const scheduleReconnect = () => {
-        if (retryCount < maxRetries) {
-          const delay = Math.min(baseDelay * Math.pow(2, retryCount), 30000); 
-          retryCount++;
-          
-          console.groupCollapsed(`WebSocket retry #${retryCount}`);
-          console.log("Next attempt in:", `${delay}ms`);
-          console.log("Current retry count:", retryCount);
-          console.groupEnd();
-    
-          retryTimeout = setTimeout(connectWebSocket, delay);
-        } else {
-          setConnectionStatus("failed");
-        }
-      };
-    
-      // Initial connection
-      connectWebSocket();
-    
-      return () => {
-        if (ws) {
-          // Disable all handlers before closing
-          ws.onopen = null;
-          ws.onclose = null;
-          ws.onmessage = null;
-          
-          if (ws.readyState === WebSocket.OPEN) {
-            ws.close(1000, "Component unmounting");
           }
-        }
-        if (retryTimeout) clearTimeout(retryTimeout);
-      };
-    }, [SERVER_IP]);
+        },
+        (status) => setConnectionStatus(status)
+      );
+    
+      return cleanup; // Cleanup WebSocket on component unmount
+    }, [SERVER_IP, selectedYear, selectedMonth, selectedDay]);
     
 
     // Toggle auto-generation of songs
     const toggleAutoGeneration = async () => {
       try {
-        if (!isAutoGenerating) {
-          const response = await fetch(`http://${SERVER_IP}/api/songs/start-auto-generation`, {
-            method: "POST",
-          });
-    
-          if (!response.ok) {
-            throw new Error("Failed to start auto-generation");
-          }
-    
-          console.log("Auto-generation started");
-        } else {
-          const response = await fetch(`http://${SERVER_IP}/api/songs/stop-auto-generation`, {
-            method: "POST",
-          });
-    
-          if (!response.ok) {
-            throw new Error("Failed to stop auto-generation");
-          }
-    
-          console.log("Auto-generation stopped");
-        }
-    
+        await toggleAutoGenerationService(isAutoGenerating);
         setIsAutoGenerating((prev) => !prev);
       } catch (error) {
         console.error("Error toggling auto-generation:", error);

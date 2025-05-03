@@ -1,5 +1,5 @@
 import React from "react";
-import "../../../../../styles/profile/overview/common/song-menu.css";
+import "@styles/profile/overview/common/song-menu.css";
 
 interface SongMenuProps {
   formData: {
