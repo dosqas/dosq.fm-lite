@@ -25,12 +25,13 @@
     "paths": {
       "@/*": [
         "./src/*"
-      ], // Existing alias for frontend files
+      ],
       "@shared/*": [
         "../shared/*"
-      ] // New alias for shared folder
+      ] ,
+      "@styles/*": ["styles/*"]
     },
-    "baseUrl": "." // Base directory for resolving paths
+    "baseUrl": "." 
     ,
     "forceConsistentCasingInFileNames": true
   },
