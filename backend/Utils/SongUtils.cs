@@ -28,9 +28,9 @@ public static class SongUtils
         {
             songs = songs.Where(song =>
                 (rangeType == "year" && song.DateListened.Year == fromDate.Value.Year) ||
-                (rangeType == "1month" && song.DateListened.Year == fromDate.Value.Year &&
+                (rangeType == "month" && song.DateListened.Year == fromDate.Value.Year &&
                 song.DateListened.Month == fromDate.Value.Month) ||
-                (rangeType == "1day" && song.DateListened.Year == fromDate.Value.Year &&
+                (rangeType == "day" && song.DateListened.Year == fromDate.Value.Year &&
                 song.DateListened.Month == fromDate.Value.Month &&
                 song.DateListened.Day == fromDate.Value.Day) ||
                 (string.IsNullOrEmpty(rangeType) || rangeType == "all" && song.DateListened >= fromDate.Value))
