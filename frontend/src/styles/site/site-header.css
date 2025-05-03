@@ -52,6 +52,7 @@
   
   /* Header Profile Styles */
   .site-header-profile {
+    margin-top: 0.5rem;
     display: flex;
     align-items: center;
   }
