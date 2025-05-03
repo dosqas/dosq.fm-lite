@@ -27,6 +27,7 @@ appsettings.Local.json
 appsettings.*.json
 secrets.json
 backend.http
+launchSettings.json
 
 # Logs
 logs/
