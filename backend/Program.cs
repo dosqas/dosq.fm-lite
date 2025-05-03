@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer; 
 using Microsoft.IdentityModel.Tokens;
+using DotNetEnv;
 using System.Text;
 using backend.Data;
 
@@ -41,6 +42,14 @@ app.Run();
 /// <param name="configuration">The IConfiguration instance.</param>
 void ConfigureServices(IServiceCollection services, IConfiguration configuration)
 {
+    Env.Load();
+
+    var jwtKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY");
+    if (string.IsNullOrEmpty(jwtKey))
+    {
+        throw new InvalidOperationException("JWT_SECRET_KEY is not set in the environment variables.");
+    }
+
     // Add Swagger
     services.AddEndpointsApiExplorer();
     services.AddSwaggerGen();
@@ -73,7 +82,7 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
             ValidateIssuerSigningKey = true,
             ValidIssuer = "dosqfmlite-backend",
             ValidAudience = "dosqfmlite-frontend",
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("your-secret-key"))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
         };
     });
 
@@ -82,9 +91,10 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
     {
         options.AddDefaultPolicy(policy =>
         {
-            policy.AllowAnyOrigin() // Allow requests from any origin
+                policy.WithOrigins("http://localhost:3000")
                   .AllowAnyMethod() // Allow any HTTP method (GET, POST, etc.)
-                  .AllowAnyHeader(); // Allow any headers
+                  .AllowAnyHeader() // Allow any headers
+                  .AllowCredentials();
         });
     });
 }
@@ -124,8 +134,10 @@ void ConfigureMiddleware(WebApplication app)
         }
     });
 
-    // Enable HTTPS redirection
-    app.UseHttpsRedirection();
+    if (!app.Environment.IsDevelopment())
+    {
+        app.UseHttpsRedirection();
+    }
 
     app.UseAuthentication(); // Enable authentication middleware
     app.UseAuthorization();  // Enable authorization middleware
