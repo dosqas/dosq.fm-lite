@@ -29,7 +29,7 @@ export const ConnectionStatusProvider: React.FC<{ children: React.ReactNode }> =
     checkServerStatus.isRunning = true;
   
     try {
-      const response = await fetch(`http://${SERVER_IP}/health-check`);
+      const response = await fetch(`http://${SERVER_IP}/api/Health`);
       if (response.ok) {
         setIsServerReachable(true);
       } else {
