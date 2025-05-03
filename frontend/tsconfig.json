@@ -23,13 +23,30 @@
       }
     ],
     "paths": {
-      "@/*": [
+      "@src": [
         "./src/*"
       ],
-      "@shared/*": [
-        "../shared/*"
-      ] ,
-      "@styles/*": ["styles/*"]
+      "@styles/*": [
+        "./src/styles/*"
+      ],
+      "@components/*": [
+        "./src/components/*"
+      ],
+      "@utils/*": [
+        "./src/utils/*"
+      ],
+      "@context/*": [
+        "./src/context/*"
+      ],
+      "@menus/*": [
+        "./src/components/profile/menus/*"
+      ],
+      "@service/*": [
+        "./src/service/*"
+      ],
+      "@entities/*": [
+        "./src/entities/*"
+      ]
     },
     "baseUrl": "." 
     ,
