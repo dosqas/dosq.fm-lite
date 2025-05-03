@@ -26,6 +26,7 @@ appsettings.Development.json
 appsettings.Local.json
 appsettings.*.json
 secrets.json
+backend.http
 
 # Logs
 logs/
@@ -46,9 +47,6 @@ TestResults/
 *.ldf
 *.sqlite
 *.db
-
-# IDE-specific files
-backend.http
 
 # Backend uploads
 backend/uploads/videos/*
