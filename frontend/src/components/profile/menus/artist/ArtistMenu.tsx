@@ -1,5 +1,5 @@
 import React from "react";
-import "../../../../../styles/profile/overview/common/artist-menu.css";
+import "@styles/profile/overview/common/artist-menu.css";
 
 interface ArtistMenuProps {
   formData: {
