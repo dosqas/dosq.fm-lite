@@ -3,8 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using backend.Data;
 using backend.Models;
 using backend.Utils;
-using System.Security.Claims;
-using Microsoft.Extensions.Configuration.UserSecrets;
 
 namespace backend.Controllers;
 
