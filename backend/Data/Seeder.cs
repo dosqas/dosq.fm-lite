@@ -2,6 +2,7 @@ using backend.Models;
 using Bogus;
 using ShellProgressBar;
 using Microsoft.EntityFrameworkCore;
+using backend.Utils;
 
 namespace backend.Data
 {
@@ -21,7 +22,11 @@ namespace backend.Data
             // Generate fake users
             var userFaker = new Faker<User>()
                 .RuleFor(u => u.Username, f => f.Internet.UserName())
-                .RuleFor(u => u.PasswordHash, f => f.Internet.Password())
+                .RuleFor(u => u.PasswordHash, f =>
+                {
+                    var plainPassword = f.Internet.Password(); // Generate a plain-text password
+                    return UserUtils.HashPassword(plainPassword); // Hash the password
+                })
                 .RuleFor(u => u.Role, f => User.UserRole.User);
 
             Console.WriteLine("Generating users...");
