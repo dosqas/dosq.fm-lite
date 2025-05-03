@@ -3,6 +3,7 @@ using Bogus;
 using ShellProgressBar;
 using Microsoft.EntityFrameworkCore;
 using backend.Utils;
+using Microsoft.AspNetCore.Identity;
 
 namespace backend.Data
 {
@@ -18,6 +19,26 @@ namespace backend.Data
             await context.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"Users\" RESTART IDENTITY CASCADE;");
 
             Console.WriteLine("Existing data cleared. Seeding new data...");
+
+            Console.WriteLine("Adding specific user: dosqas...");
+            var specificUser = new User
+            {
+                Username = "dosqas",
+                PasswordHash = UserUtils.HashPassword("admin"), // Hash the password
+                Role = User.UserRole.User 
+            };
+            context.Users.Add(specificUser);
+            await context.SaveChangesAsync();
+
+            Console.WriteLine("Adding specific admin: dosqasAdmin...");
+            var specificAdmin = new User
+            {
+                Username = "dosqasAdmin",
+                PasswordHash = UserUtils.HashPassword("admin"), // Hash the password
+                Role = User.UserRole.Admin 
+            };
+            context.Users.Add(specificAdmin);
+            await context.SaveChangesAsync();
 
             // Generate fake users
             var userFaker = new Faker<User>()
