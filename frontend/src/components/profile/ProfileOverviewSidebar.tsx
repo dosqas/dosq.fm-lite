@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, RefObject } from "react";
 import "../../../styles/profile/overview/profile-overview-sidebar.css";
 import { ProfileSongsColHandle } from "./common/ProfileSongsCol";
-import { useConnectionStatus } from "../../../context/ConnectionStatusContext";
+import { useConnectionStatus } from "../../context/ConnectionStatusContext";
 
 interface ProfileSidebarProps {
   trackingRef: RefObject<ProfileSongsColHandle | null>;
@@ -115,11 +115,6 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ trackingRef }) => {
 
   return (
     <div className="profile-sidebar">
-      <div className="profile-sidebar-content">
-        This is a sample bio. The user will be able to edit this
-      </div>
-      <hr className="profile-sidebar-divider" />
-
       <div className="video-upload-section">
         <h3>Favorite concert video</h3>
         <input
@@ -145,14 +140,15 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ trackingRef }) => {
           </div>
         )}
       </div>
-
       <hr className="profile-sidebar-divider" />
+      
       <button
         className="profile-sidebar-add-track-button"
         onClick={handleAddTrackClick}
       >
         Add Track
       </button>
+      <hr className="profile-sidebar-divider" />
     </div>
   );
 };

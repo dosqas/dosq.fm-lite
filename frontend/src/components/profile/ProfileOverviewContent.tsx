@@ -2,7 +2,7 @@
 
 import React, { useRef } from "react";
 import ProfileSongsCol, { ProfileSongsColHandle } from "./common/ProfileSongsCol";
-import ProfileOverviewSidebar from "./ProfileOverviewSidebar";
+import ProfileOverviewSidebar from "../ProfileOverviewSidebar";
 import "../../../styles/profile/overview/profile-overview-content.css";
 
 const ProfileContent: React.FC = () => {
