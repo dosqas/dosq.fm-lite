@@ -1,14 +1,16 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Link from "next/link";
 import Image from "next/legacy/image";
 import "../../../styles/profile/shared/profile-header.css";
-import { usePathname } from "next/navigation";
 import { useConnectionStatus } from "../../../context/ConnectionStatusContext";
 
-const ProfileHeader: React.FC = () => {
-  const pathname = usePathname();
+interface ProfileHeaderProps {
+  username: string | null;
+  error: string | null;
+}
+
+const ProfileHeader: React.FC<ProfileHeaderProps> = ({ username, error }) => {
   const { isOnline, isServerReachable, statusMessage } = useConnectionStatus();
   const [showStatusBar, setShowStatusBar] = useState(false);
   const [statusColor, setStatusColor] = useState("red");
@@ -54,41 +56,11 @@ const ProfileHeader: React.FC = () => {
           />
         </div>
         <div className="profile-header-info">
-          <div className="profile-header-username">dosqas</div>
-          <div className="profile-header-name-and-dosqing-since">
-            <span className="profile-header-name">sebsop </span>
-            <span className="profile-header-dosqing-since">• dosqing since 17 Mar 2025</span>
-          </div>
-          <div className="profile-header-tabs">
-            <Link href="/profile/" legacyBehavior>
-              <a className={pathname === "/profile" ? "active" : ""}>Overview</a>
-            </Link>
-            <Link href="/profile/reports" legacyBehavior>
-              <a className={pathname === "/profile/reports" ? "active" : ""}>Reports</a>
-            </Link>
-            <Link href="/profile/library" legacyBehavior>
-              <a className={pathname === "/profile/library" ? "active" : ""}>Library</a>
-            </Link>
-            <Link href="/profile/trends" legacyBehavior>
-              <a className={pathname === "/profile/trends" ? "active" : ""}>Trends</a>
-            </Link>
-            <Link href="/profile/breakdown" legacyBehavior>
-              <a className={pathname === "/profile/breakdown" ? "active" : ""}>Breakdown</a>
-            </Link>
-            <Link href="/profile/obscurity" legacyBehavior>
-              <a className={pathname === "/profile/obscurity" ? "active" : ""}>Obscurity</a>
-            </Link>
-          </div>
-          <div className="profile-header-stats">
-            <div className="profile-header-stat">
-              <span className="profile-header-stat-label">DOSQS</span>
-              <span className="profile-header-stat-value">25</span>
-            </div>
-            <div className="profile-header-stat">
-              <span className="profile-header-stat-label">ARTISTS</span>
-              <span className="profile-header-stat-value">5</span>
-            </div>
-          </div>
+          {error ? (
+            <p style={{ color: "red" }}>{error}</p>
+          ) : (
+            <div className="profile-header-username">{username}</div>
+          )}
         </div>
       </div>
     </header>
