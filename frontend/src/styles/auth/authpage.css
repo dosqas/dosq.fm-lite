@@ -1,0 +1,111 @@
+/* Center the login page content */
+.login-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 25%;
+  font-family: var(--font-sans);
+  flex-direction: column;
+  padding: 0.5rem;
+  border: 1px solid #888; /* Light gray border */
+  color: #888;
+  gap: 0.5rem;
+}
+
+.success-message {
+  color: #4caf50; /* Green for success */
+  font-size: 0.9rem;
+  margin-bottom: 15px;
+}
+
+/* Style the heading */
+.login-page h2 {
+  margin-bottom: 20px;
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #B51811;
+}
+
+/* Style the error message */
+.error-message {
+  color: #af5551;
+  font-size: 0.9rem;
+  margin-bottom: 15px;
+}
+
+/* Style the input fields */
+.login-page input {
+  width: 90%;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  box-sizing: border-box; /* Ensure padding doesn't affect width */
+}
+
+/* Style the login button */
+.login-page button {
+  width: 90%;
+  padding: 10px;
+  background-color: #B51811; /* Blue background */
+  color: white;
+  border: none;
+
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+/* Hover effect for the button */
+.login-page button:hover {
+  background-color: #D32F2F; 
+}
+
+/* Style the register redirect section */
+.register-redirect {
+  margin-top: 20px;
+  text-align: center;
+  width: 100%;
+}
+
+.register-redirect p {
+  margin-bottom: 10px;
+  font-size: 0.9rem;
+  color: #ccc; /* Light gray text for contrast */
+}
+
+.register-redirect button {
+  width: 90%;
+  padding: 10px;
+  background-color: #B51811; /* Blue background */
+  color: white;
+  border: none;
+
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.register-redirect button:hover {
+  background-color: #D32F2F; /* Slightly brighter red on hover */
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 600px) {
+  .login-page > div {
+    padding: 15px 20px;
+  }
+
+  .login-page h2 {
+    font-size: 1.5rem;
+  }
+
+  .login-page input {
+    font-size: 0.9rem;
+  }
+
+  .login-page button {
+    font-size: 0.9rem;
+  }
+}
