@@ -1,6 +1,6 @@
 const HomePage: React.FC = () => {
     return (
-      <div>
+      <div style= {{ color: '#888'}}>
         <p>Your web music tracker with stats & analytics.</p>
       </div>
     );
