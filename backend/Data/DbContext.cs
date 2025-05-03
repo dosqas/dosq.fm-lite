@@ -47,6 +47,19 @@ namespace backend.Data
                 .HasForeignKey(mu => mu.UserId)
                 .OnDelete(DeleteBehavior.Cascade); // Cascade delete monitored user entry when a user is deleted
 
+            modelBuilder.Entity<User>()
+                .Property(u => u.Role)
+                .HasConversion<string>(); // Store the enum as a string
+
+            modelBuilder.Entity<LogEntry>()
+                .Property(u => u.Action)
+                .HasConversion<string>(); // Store the enum as a string
+
+            modelBuilder.Entity<LogEntry>()
+                    .Property(u => u.Entity)
+                    .HasConversion<string>(); // Store the enum as a string
+
+
             // Add index on DateListened for filtering
             modelBuilder.Entity<Song>()
                 .HasIndex(s => s.DateListened)
