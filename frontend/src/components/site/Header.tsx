@@ -13,14 +13,9 @@ const Header: React.FC = () => {
           </Link>
         </div>
         <div className="site-header-user-actions">
-            <div className="site-header-nav">
-                <Link href="/concerts">Concerts</Link>
-                <Link href="/discovery">Discovery</Link>
-                <Link href="/social">Social</Link>
-            </div>
             <div className="site-header-profile">
                 <Link href="/profile">
-                    <Image src="/images/user-circle.svg" alt="User Profile" width={40} height={40} priority/>   
+                    <Image src="/images/user-circle.svg" alt="User Profile" width={50} height={50} priority/>   
                 </Link>
             </div>
         </div>
