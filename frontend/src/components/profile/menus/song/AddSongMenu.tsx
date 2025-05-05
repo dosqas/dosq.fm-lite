@@ -6,6 +6,7 @@ interface AddSongMenuProps {
     title: string;
     album: string;
     dateListened: string; // ISO string for the date
+    timeListened: string; // Time in HH:mm format
     artistId: string; // Artist ID as a string
   };
   error: string | null;
@@ -27,7 +28,7 @@ const AddSongMenu: React.FC<AddSongMenuProps> = ({
 }) => {
   return (
     <SongMenu
-      formData={formData}
+      formData={formData} // Pass formData including timeListened
       error={error}
       successMessage={successMessage}
       onClose={onClose}
