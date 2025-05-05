@@ -28,10 +28,22 @@ public class ArtistsController : ControllerBase
         try
         {
             // Fetch all artists from the database
-            var artists = await _context.Artists.Include(a => a.Songs).ToListAsync();
+            var artists = await _context.Artists
+                .Select(a => new
+                {
+                    a.ArtistId,
+                    a.Name,
+                    SongCount = _context.Songs.Count(s => s.Artist.ArtistId == a.ArtistId)
+                })
+                .ToListAsync();
 
             // Apply filtering and sorting in memory
-            artists = ArtistUtils.FilterAndSortArtists(artists, minSongs, maxSongs);
+            artists = ArtistUtils.FilterAndSortArtists(
+                artists,
+                minSongs,
+                maxSongs,
+                a => a.SongCount // Pass a lambda to extract the SongCount
+            );
 
             // Return the result
             if (artists == null || artists.Count == 0)
@@ -70,10 +82,22 @@ public class ArtistsController : ControllerBase
             }
 
             // Fetch artists with pagination
-            var artists = await _context.Artists.Include(a => a.Songs).ToListAsync();
+            var artists = await _context.Artists
+                .Select(a => new
+                {
+                    a.ArtistId,
+                    a.Name,
+                    SongCount = _context.Songs.Count(s => s.Artist.ArtistId == a.ArtistId) // Count songs for each artist
+                })
+                .ToListAsync();
 
             // Apply filtering and sorting
-            artists = ArtistUtils.FilterAndSortArtists(artists, minSongs, maxSongs);
+            artists = ArtistUtils.FilterAndSortArtists(
+                artists,
+                minSongs,
+                maxSongs,
+                a => a.SongCount // Pass a lambda to extract the SongCount
+            );
 
             // Pagination
             var total = artists.Count;
@@ -111,7 +135,15 @@ public class ArtistsController : ControllerBase
     {
         try
         {
-            var artist = await _context.Artists.Include(a => a.Songs).FirstOrDefaultAsync(a => a.ArtistId == id);
+            var artist = await _context.Artists
+                .Where(a => a.ArtistId == id)
+                .Select(a => new
+                {
+                    a.ArtistId,
+                    a.Name,
+                    SongCount = _context.Songs.Count(s => s.Artist.ArtistId == a.ArtistId) // Count songs for the artist
+                })
+                .FirstOrDefaultAsync();
             if (artist == null)
             {
                 return NotFound(new { error = "Artist not found" });
