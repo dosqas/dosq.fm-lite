@@ -82,7 +82,7 @@ public class SongsController(AppDbContext context, Services.WebSocketManager web
             // Fetch songs for the authenticated user with pagination
             var songsQuery = _context.Songs
                 .Where(s => s.UserId == userId)
-                .OrderByDescending(s => s.DateListened); 
+                .OrderByDescending(s => s.DateListened);
 
             var total = await songsQuery.CountAsync();
             var paginatedSongs = await songsQuery
@@ -103,7 +103,7 @@ public class SongsController(AppDbContext context, Services.WebSocketManager web
                 .ToListAsync();
 
             // Apply filtering and sorting
-            var filteredSongs = SongUtils.FilterAndSortSongsAsync(paginatedSongs, from, rangetype);
+            var filteredSongs = await SongUtils.FilterAndSortSongsAsync(paginatedSongs, from, rangetype);
 
             // Check if there are more songs to load
             var hasMore = page * limit < total;
@@ -118,7 +118,14 @@ public class SongsController(AppDbContext context, Services.WebSocketManager web
         finally
         {
             // Log the action for auditing purposes
-            await _loggingService.LogAction(userId, LogEntry.ActionType.READ, LogEntry.EntityType.Song);
+            try
+            {
+                await _loggingService.LogAction(userId, LogEntry.ActionType.READ, LogEntry.EntityType.Song);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Error logging action: {ex.Message}");
+            }
         }
     }
 
