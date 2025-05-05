@@ -22,7 +22,24 @@ namespace backend.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("LogEntry", b =>
+            modelBuilder.Entity("backend.Models.Artist", b =>
+                {
+                    b.Property<int>("ArtistId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ArtistId"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("ArtistId");
+
+                    b.ToTable("Artists");
+                });
+
+            modelBuilder.Entity("backend.Models.LogEntry", b =>
                 {
                     b.Property<int>("LogEntryId")
                         .ValueGeneratedOnAdd()
@@ -51,7 +68,7 @@ namespace backend.Migrations
                     b.ToTable("LogEntries");
                 });
 
-            modelBuilder.Entity("MonitoredUser", b =>
+            modelBuilder.Entity("backend.Models.MonitoredUser", b =>
                 {
                     b.Property<int>("MonitoredUserId")
                         .ValueGeneratedOnAdd()
@@ -74,23 +91,6 @@ namespace backend.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("MonitoredUsers");
-                });
-
-            modelBuilder.Entity("backend.Models.Artist", b =>
-                {
-                    b.Property<int>("ArtistId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ArtistId"));
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("ArtistId");
-
-                    b.ToTable("Artists");
                 });
 
             modelBuilder.Entity("backend.Models.Song", b =>
@@ -159,50 +159,39 @@ namespace backend.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("LogEntry", b =>
+            modelBuilder.Entity("backend.Models.LogEntry", b =>
                 {
-                    b.HasOne("backend.Models.User", "User")
+                    b.HasOne("backend.Models.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("User");
                 });
 
-            modelBuilder.Entity("MonitoredUser", b =>
+            modelBuilder.Entity("backend.Models.MonitoredUser", b =>
                 {
-                    b.HasOne("backend.Models.User", "User")
+                    b.HasOne("backend.Models.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("backend.Models.Song", b =>
                 {
                     b.HasOne("backend.Models.Artist", "Artist")
-                        .WithMany("Songs")
+                        .WithMany()
                         .HasForeignKey("ArtistId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("backend.Models.User", "User")
+                    b.HasOne("backend.Models.User", null)
                         .WithMany("Songs")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Artist");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("backend.Models.Artist", b =>
-                {
-                    b.Navigation("Songs");
                 });
 
             modelBuilder.Entity("backend.Models.User", b =>
