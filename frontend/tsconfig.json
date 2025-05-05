@@ -24,31 +24,37 @@
     ],
     "paths": {
       "@src": [
-        "./src/*"
+        "*"
       ],
       "@styles/*": [
-        "./src/styles/*"
+        "styles/*"
       ],
       "@components/*": [
-        "./src/components/*"
+        "components/*"
       ],
       "@utils/*": [
-        "./src/utils/*"
+        "utils/*"
       ],
       "@context/*": [
-        "./src/context/*"
+        "context/*"
       ],
       "@menus/*": [
-        "./src/components/profile/menus/*"
+        "components/profile/menus/*"
       ],
       "@service/*": [
-        "./src/service/*"
+        "service/*"
       ],
       "@entities/*": [
-        "./src/entities/*"
-      ]
+        "entities/*"
+      ],
+      "@config/*": [
+        "config/*"
+      ],
+      "@hooks/*": [
+        "hooks/*"
+      ],
     },
-    "baseUrl": "." 
+    "baseUrl": "./src" 
     ,
     "forceConsistentCasingInFileNames": true
   },
