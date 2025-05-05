@@ -20,45 +20,46 @@ namespace backend.Data
 
             // Configure cascade delete for Artist -> Songs relationship
             modelBuilder.Entity<Song>()
-                .HasOne(s => s.Artist)
-                .WithMany(a => a.Songs)
-                .HasForeignKey(s => s.ArtistId)
-                .OnDelete(DeleteBehavior.Cascade); // Cascade delete songs when an artist is deleted
+                .HasOne(s => s.Artist) // Navigation property in Song
+                .WithMany() // No navigation property in Artist
+                .HasForeignKey("ArtistId") // Foreign key column
+                .OnDelete(DeleteBehavior.Cascade); // Cascade delete songs when an artist is deleted  
 
             // Configure cascade delete for User -> Songs relationship
-            modelBuilder.Entity<User>()
-                .HasMany(u => u.Songs)
-                .WithOne(s => s.User)
+            modelBuilder.Entity<Song>()
+                .HasOne<User>() // No navigation property in Song
+                .WithMany(u => u.Songs)
                 .HasForeignKey(s => s.UserId)
                 .OnDelete(DeleteBehavior.Cascade); // Cascade delete songs when a user is deleted
 
             // Configure cascade delete for LogEntry -> User relationship
             modelBuilder.Entity<LogEntry>()
-                .HasOne(le => le.User)
-                .WithMany() // No navigation property in User
+                .HasOne<User>() // No navigation property in LogEntry
+                .WithMany()
                 .HasForeignKey(le => le.UserId)
                 .OnDelete(DeleteBehavior.Cascade); // Cascade delete log entries when a user is deleted
 
-
             // Configure cascade delete for MonitoredUser -> User relationship
             modelBuilder.Entity<MonitoredUser>()
-                .HasOne(mu => mu.User)
+                .HasOne<User>() // No navigation property in MonitoredUser
                 .WithMany()
                 .HasForeignKey(mu => mu.UserId)
                 .OnDelete(DeleteBehavior.Cascade); // Cascade delete monitored user entry when a user is deleted
 
+            // Configure enum-to-string conversion for User.Role
             modelBuilder.Entity<User>()
                 .Property(u => u.Role)
                 .HasConversion<string>(); // Store the enum as a string
 
+            // Configure enum-to-string conversion for LogEntry.Action
             modelBuilder.Entity<LogEntry>()
-                .Property(u => u.Action)
+                .Property(le => le.Action)
                 .HasConversion<string>(); // Store the enum as a string
 
+            // Configure enum-to-string conversion for LogEntry.Entity
             modelBuilder.Entity<LogEntry>()
-                    .Property(u => u.Entity)
-                    .HasConversion<string>(); // Store the enum as a string
-
+                .Property(le => le.Entity)
+                .HasConversion<string>(); // Store the enum as a string
 
             // Add index on DateListened for filtering
             modelBuilder.Entity<Song>()
@@ -67,7 +68,7 @@ namespace backend.Data
 
             // Add index on ArtistId for grouping and joining
             modelBuilder.Entity<Song>()
-                .HasIndex(s => s.ArtistId)
+                .HasIndex("ArtistId") // Index on the foreign key column
                 .HasDatabaseName("IX_Songs_ArtistId");
         }
     }
