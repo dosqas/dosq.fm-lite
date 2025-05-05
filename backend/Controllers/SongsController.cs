@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using backend.Data;
 using backend.Models;
 using backend.Utils;
+using backend.DTOs;
 
 namespace backend.Controllers;
 
@@ -28,12 +29,23 @@ public class SongsController(AppDbContext context, Services.WebSocketManager web
 
             // Fetch all songs for the authenticated user
             var songs = await _context.Songs
-                .Include(s => s.Artist)
                 .Where(s => s.UserId == userId)
+                .Select(s => new SongDto
+                {
+                    SongId = s.SongId,
+                    Title = s.Title,
+                    Album = s.Album,
+                    DateListened = s.DateListened.ToString("o"), // Format as ISO 8601 string
+                    Artist = new ArtistDto
+                    {
+                        ArtistId = s.Artist.ArtistId, // Fetch ArtistId from the Artist entity
+                        Name = s.Artist.Name // Fetch ArtistName from the Artist entity
+                    }
+                })
                 .ToListAsync();
 
             // Apply filtering and sorting
-            var filteredSongs = SongUtils.FilterAndSortSongs(songs, from, rangetype);
+            var filteredSongs = SongUtils.FilterAndSortSongsAsync(songs, from, rangetype);
 
             return Ok(filteredSongs);
         }
@@ -42,7 +54,7 @@ public class SongsController(AppDbContext context, Services.WebSocketManager web
             Console.Error.WriteLine($"Error fetching songs: {ex.Message}");
             return StatusCode(500, "Internal Server Error");
         }
-        finally 
+        finally
         {
             // Log the action for auditing purposes
             await _loggingService.LogAction(userId, LogEntry.ActionType.READ, LogEntry.EntityType.Song);
@@ -69,17 +81,29 @@ public class SongsController(AppDbContext context, Services.WebSocketManager web
 
             // Fetch songs for the authenticated user with pagination
             var songsQuery = _context.Songs
-                .Include(s => s.Artist)
-                .Where(s => s.UserId == userId);
+                .Where(s => s.UserId == userId)
+                .OrderByDescending(s => s.DateListened); 
 
             var total = await songsQuery.CountAsync();
             var paginatedSongs = await songsQuery
                 .Skip((page - 1) * limit)
                 .Take(limit)
+                .Select(s => new SongDto
+                {
+                    SongId = s.SongId,
+                    Title = s.Title,
+                    Album = s.Album,
+                    DateListened = s.DateListened.ToString("o"), // Format as ISO 8601 string
+                    Artist = new ArtistDto
+                    {
+                        ArtistId = s.Artist.ArtistId,
+                        Name = s.Artist.Name
+                    }
+                })
                 .ToListAsync();
 
             // Apply filtering and sorting
-            var filteredSongs = SongUtils.FilterAndSortSongs(paginatedSongs, from, rangetype);
+            var filteredSongs = SongUtils.FilterAndSortSongsAsync(paginatedSongs, from, rangetype);
 
             // Check if there are more songs to load
             var hasMore = page * limit < total;
@@ -91,7 +115,7 @@ public class SongsController(AppDbContext context, Services.WebSocketManager web
             Console.Error.WriteLine($"Error fetching limited songs: {ex.Message}");
             return StatusCode(500, "Internal Server Error");
         }
-        finally 
+        finally
         {
             // Log the action for auditing purposes
             await _loggingService.LogAction(userId, LogEntry.ActionType.READ, LogEntry.EntityType.Song);
@@ -109,7 +133,6 @@ public class SongsController(AppDbContext context, Services.WebSocketManager web
 
             // Find the song by ID for the authenticated user
             var song = await _context.Songs
-                .Include(s => s.Artist)
                 .FirstOrDefaultAsync(s => s.SongId == id && s.UserId == userId);
 
             if (song == null)
@@ -211,7 +234,6 @@ public class SongsController(AppDbContext context, Services.WebSocketManager web
 
             // Find the song by ID for the authenticated user
             var song = await _context.Songs
-                .Include(s => s.Artist)
                 .FirstOrDefaultAsync(s => s.SongId == id && s.UserId == userId);
 
             if (song == null)
@@ -223,7 +245,16 @@ public class SongsController(AppDbContext context, Services.WebSocketManager web
             if (!string.IsNullOrEmpty(partialUpdate.Title)) song.Title = partialUpdate.Title;
             if (!string.IsNullOrEmpty(partialUpdate.Album)) song.Album = partialUpdate.Album;
             if (partialUpdate.DateListened != default) song.DateListened = partialUpdate.DateListened;
-            if (partialUpdate.Artist != null) song.Artist = partialUpdate.Artist;
+            if (partialUpdate.Artist.ArtistId != 0)
+            {
+                // Find the artist by ID
+                var artist = await _context.Artists.FirstOrDefaultAsync(a => a.ArtistId == partialUpdate.Artist.ArtistId);
+                if (artist == null)
+                {
+                    return BadRequest(new { error = "Invalid ArtistId. Artist not found." });
+                }
+                song.Artist = artist; // Assign the Artist entity
+            }
 
             // Validate the updated song
             var validationError = SongUtils.ValidateSong(song);
