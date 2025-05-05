@@ -26,6 +26,6 @@ namespace backend.Models
         public string? ProfileVideoPath { get; set; }
 
         // Relationships
-        public ICollection<Song> Songs { get; set; } = new List<Song>();
+        public ICollection<Song> Songs { get; set; } = [];
     }
 }
