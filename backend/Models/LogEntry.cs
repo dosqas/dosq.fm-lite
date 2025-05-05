@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using backend.Models;
+
+namespace backend.Models;
 
 public class LogEntry
 {
@@ -24,9 +24,6 @@ public class LogEntry
 
     [Required]
     public required int UserId { get; set; } // Foreign key to User table
-
-    [ForeignKey(nameof(UserId))]
-    public required User User { get; set; } // Navigation property
 
     [Required]
     public required ActionType Action { get; set; } // e.g., "CREATE", "READ", "UPDATE", "DELETE"
