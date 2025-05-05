@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using backend.Models;
+
+namespace backend.Models;
 
 public class MonitoredUser
 {
@@ -9,9 +9,6 @@ public class MonitoredUser
 
     [Required]
     public required int UserId { get; set; } // Foreign key to User table
-
-    [ForeignKey(nameof(UserId))]
-    public required User User { get; set; } // Navigation property
 
     [Required]
     public required string Reason { get; set; } // Reason for being flagged (e.g., "High frequency of DELETE operations")
