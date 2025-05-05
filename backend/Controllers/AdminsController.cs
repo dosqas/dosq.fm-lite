@@ -25,13 +25,17 @@ public class AdminController : ControllerBase
 
         // Fetch the list of monitored users
         var monitoredUsers = await _context.MonitoredUsers
-            .Include(mu => mu.User)
-            .Select(mu => new
-            {
-                mu.User.Username,
-                mu.Reason,
-                mu.FlaggedAt
-            })
+            .Join(
+                _context.Users, // Join with the Users table
+                mu => mu.UserId, // Foreign key in MonitoredUser
+                u => u.UserId,   // Primary key in User
+                (mu, u) => new
+                {
+                    u.Username, // Fetch the Username from the User table
+                    mu.Reason,
+                    mu.FlaggedAt
+                }
+            )
             .ToListAsync();
 
         return Ok(monitoredUsers);
