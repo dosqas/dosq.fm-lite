@@ -6,8 +6,7 @@ export interface Song {
   title: string; // Required
   album: string; // Required
   dateListened: string; // ISO 8601 string (e.g., "2025-05-04T00:00:00Z")
-  artistId: number; // Foreign key for Artist
-  artist: Artist; // Required
-  userId: number; // Foreign key for User
-  user: User; // Required
+  timeListened?: string; // Time in HH:mm format (e.g., "14:30")
+  artist: Partial<Artist>; // Use Partial to include only necessary fields
+  user: Partial<User>; // Use Partial to include only necessary fields
 }
