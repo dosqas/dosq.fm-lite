@@ -23,10 +23,11 @@ namespace backend.Controllers
 
             var topArtists = await _context.Songs
                 .Where(s => s.DateListened >= thirtyDaysAgo) // Filter songs listened to in the last 30 days
-                .GroupBy(s => s.Artist.Name) // Group by artist name
+                .GroupBy(s => s.Artist.ArtistId) // Group by ArtistId
                 .Select(g => new
                 {
-                    ArtistName = g.Key,
+                    ArtistId = g.Key,
+                    ArtistName = g.Select(s => s.Artist.Name).FirstOrDefault() ?? "Unknown Artist", // Fetch the artist's name or default to "Unknown Artist"
                     SongCount = g.Count() // Count the number of songs for each artist
                 })
                 .OrderByDescending(a => a.SongCount) // Order by song count
