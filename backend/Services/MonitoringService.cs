@@ -41,7 +41,6 @@ public class MonitoringService
                     _context.MonitoredUsers.Add(new MonitoredUser
                     {
                         UserId = user.UserId,
-                        User = userEntity,
                         Reason = $"High frequency of actions: {user.ActionCount} actions in the last day",
                         FlaggedAt = DateTime.UtcNow
                     });
