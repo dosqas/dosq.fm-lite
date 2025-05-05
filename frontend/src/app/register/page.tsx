@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { redirect } from "next/navigation"; // Import redirect for navigation
-import "@styles/login/loginpage.css"; // Reuse the same CSS styles
+import "@styles/auth/authpage.css"; // Reuse the same CSS styles
 
 const RegisterPage: React.FC = () => {
   const [username, setUsername] = useState("");
