@@ -27,6 +27,18 @@ const SongCard: React.FC<SongCardProps> = ({
   onMenuToggle,
   onMenuClose,
 }) => {
+  // Format the date
+  const date = new Date(dateListened);
+  const day = date.getDate();
+  const month = date.toLocaleString("en-US", { month: "short" }); // e.g., "Dec"
+  const year = date.getFullYear();
+  const hours = date.getHours() % 12 || 12; // Convert to 12-hour format
+  const formattedHours = hours < 10 ? `\u00A0\u00A0${hours}` : hours; // Add a space if the hour is a single digit
+  const minutes = date.getMinutes().toString().padStart(2, "0"); // Add leading zero
+  const ampm = date.getHours() >= 12 ? "PM" : "AM";
+
+  const formattedDate = `${day} ${month} ${year}, ${formattedHours}:${minutes} ${ampm}`;
+
   return (
     <div
       className="song-card"
@@ -45,7 +57,7 @@ const SongCard: React.FC<SongCardProps> = ({
           <span className="song-card-title">{title}</span>
           <span className="song-card-album">{album}</span>
           <span className="song-card-artist">{artist}</span>
-          <span className="song-card-dateListened">{dateListened}</span>
+          <span className="song-card-dateListened">{formattedDate}</span>
           <button
             className="song-card-kebab-menu"
             onClick={onMenuToggle}
