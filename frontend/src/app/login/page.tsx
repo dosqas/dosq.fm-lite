@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import "@styles/login/loginpage.css";
+import "@styles/auth/authpage.css";
 import { isLoggedIn, setToken } from "@utils/authUtils";
 
 const LoginPage: React.FC = () => {
