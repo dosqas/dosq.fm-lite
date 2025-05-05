@@ -23,7 +23,6 @@ public class LoggingService
         var logEntry = new LogEntry
         {
             UserId = userId,
-            User = user, // Set the User property
             Action = action, // e.g., "CREATE", "READ", "UPDATE", "DELETE"
             Entity = entity, // e.g., "Song", "Artist"
             Timestamp = DateTime.UtcNow
