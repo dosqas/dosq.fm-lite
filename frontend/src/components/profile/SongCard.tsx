@@ -36,7 +36,7 @@ const SongCard: React.FC<SongCardProps> = ({
       <div className="song-card-content">
         <Image
           className="song-card-image"
-          src="/vinyl-icon.svg" // Default album cover
+          src="/images/vinyl-icon.svg" // Default album cover
           alt={`${title} album cover`}
           width="50"
           height="50"
