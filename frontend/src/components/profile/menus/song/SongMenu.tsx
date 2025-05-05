@@ -6,12 +6,13 @@ interface SongMenuProps {
     title: string;
     album: string;
     dateListened: string; // ISO string for the date
+    timeListened: string; // Time in HH:mm format
     artistId: string; // Artist ID as a string
   };
   error: string | null;
   successMessage: string | null;
   onClose: () => void;
-  onSubmit: (e: React.FormEvent) => void;
+  onSubmit: (formData: any) => void; // Updated to pass combined data
   onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
   title: string;
   submitButtonText: string;
@@ -29,6 +30,20 @@ const SongMenu: React.FC<SongMenuProps> = ({
   submitButtonText,
   artists,
 }) => {
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Combine date and time into an ISO 8601 string
+    const combinedDateTime = `${formData.dateListened}T${formData.timeListened}:00Z`;
+
+    const updatedFormData = {
+      ...formData,
+      dateListened: combinedDateTime, // Replace with combined date and time
+    };
+
+    onSubmit(updatedFormData); // Pass the updated form data to the parent
+  };
+
   return (
     <div className="overlay" onMouseDown={onClose}>
       <div className="song-menu" onMouseDown={(e) => e.stopPropagation()}>
@@ -38,7 +53,7 @@ const SongMenu: React.FC<SongMenuProps> = ({
 
         <h3 className="song-menu-title">{title}</h3>
 
-        <form className="song-menu-form" onSubmit={onSubmit}>
+        <form className="song-menu-form" onSubmit={handleSubmit}>
           <label className="song-menu-label">
             Song Title:
             <input
@@ -65,6 +80,15 @@ const SongMenu: React.FC<SongMenuProps> = ({
               type="date"
               name="dateListened"
               value={formData.dateListened}
+              onChange={onInputChange}
+            />
+          </label>
+          <label className="song-menu-label">
+            Time Listened:
+            <input
+              type="time"
+              name="timeListened"
+              value={formData.timeListened}
               onChange={onInputChange}
             />
           </label>
