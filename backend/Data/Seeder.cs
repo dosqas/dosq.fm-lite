@@ -3,7 +3,6 @@ using Bogus;
 using ShellProgressBar;
 using Microsoft.EntityFrameworkCore;
 using backend.Utils;
-using Microsoft.AspNetCore.Identity;
 
 namespace backend.Data
 {
@@ -25,7 +24,7 @@ namespace backend.Data
             {
                 Username = "dosqas",
                 PasswordHash = UserUtils.HashPassword("admin"), // Hash the password
-                Role = User.UserRole.User 
+                Role = User.UserRole.User
             };
             context.Users.Add(specificUser);
             await context.SaveChangesAsync();
@@ -35,7 +34,7 @@ namespace backend.Data
             {
                 Username = "dosqasAdmin",
                 PasswordHash = UserUtils.HashPassword("admin"), // Hash the password
-                Role = User.UserRole.Admin 
+                Role = User.UserRole.Admin
             };
             context.Users.Add(specificAdmin);
             await context.SaveChangesAsync();
@@ -88,7 +87,11 @@ namespace backend.Data
             var songFaker = new Faker<Song>()
                 .RuleFor(s => s.Title, f => f.Lorem.Sentence(3))
                 .RuleFor(s => s.Album, f => f.Lorem.Word())
-                .RuleFor(s => s.DateListened, f => f.Date.Past(2).ToUniversalTime()); // Convert to UTC
+                .RuleFor(s => s.DateListened, f =>
+                {
+                    var date = f.Date.Past(5).ToUniversalTime(); // Generate a random date in the past 5 years
+                    return new DateTime(date.Year, date.Month, date.Day, date.Hour, date.Minute, 0, DateTimeKind.Utc); // Set seconds to 00
+                });
 
             Console.WriteLine("Generating songs...");
             using (var progressBar = new ProgressBar(allArtists.Count, "Seeding Songs"))
@@ -99,7 +102,7 @@ namespace backend.Data
                     var songs = songFaker.Generate(songsPerArtist);
                     foreach (var song in songs)
                     {
-                        song.Artist = artist;
+                        song.Artist = artist; // Assign the Artist entity directly
                         song.UserId = allUsers[new Random().Next(allUsers.Count)].UserId; // Assign random user
                         songBatch.Add(song);
                     }
