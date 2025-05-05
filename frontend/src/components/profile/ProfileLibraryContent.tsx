@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from "react";
 import LibraryHeader from "./ProfileLibraryHeader";
-import ProfileSongsCol, { ProfileSongsColHandle } from "./ProfileSongsCol";
+import SongList, { SongListHandle } from "./lists/SongList";
 import LibrarySidebar from "./ProfileLibrarySidebar";
 import "@styles/profile/library/profile-library-content.css";
 
@@ -11,7 +11,7 @@ const ProfileLibraryContent: React.FC = () => {
   const [selectedYear, setSelectedYear] = useState<string | null>(null);
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
-  const songsColRef = useRef<ProfileSongsColHandle>(null);
+  const songsColRef = useRef<SongListHandle>(null);
 
   return (
     <div className="profile-library-content">
@@ -22,7 +22,7 @@ const ProfileLibraryContent: React.FC = () => {
       <hr className="profile-library-content-hr" />
 
       <div className="profile-library-content-grid">
-        <ProfileSongsCol
+        <SongList
           ref={songsColRef}
           selectedYear={selectedYear}
           selectedMonth={selectedMonth}
