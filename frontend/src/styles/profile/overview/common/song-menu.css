@@ -1,0 +1,131 @@
+/* Overlay */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(5px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* Main Song Menu Container */
+.song-menu {
+  background: #252728;
+  padding: 20px;
+  border-radius: 8px;
+  width: 400px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  position: relative;
+  z-index: 1001;
+  margin-top: 1rem;
+  border: 1px solid #B51811;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #ABA8A7;
+}
+
+/* Title */
+.song-menu-title {
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+  font-weight: bold;
+  text-align: center;
+}
+
+/* Close Button */
+.close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 2rem;
+  font-weight: bold;
+  cursor: pointer;
+  color: #B51811;
+}
+
+.close-button:hover {
+  color: #ff0000;
+}
+
+/* Form */
+.song-menu-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+}
+
+.song-menu-form input,
+.song-menu-form select {
+  display: block;
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+/* Submit Button */
+.submit-song-button {
+  width: 100%;
+  padding: 10px;
+  background: #B51811;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.submit-song-button:hover {
+  background: #D32F2F;
+}
+
+.submit-song-button:active {
+  background: #B51811;
+}
+
+/* Labels */
+.song-menu-label {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  font-size: 0.875rem;
+  width: 100%;
+  gap: 0.25rem;
+}
+
+.song-menu-label input,
+.song-menu-label select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  font-size: 0.875rem;
+  border-radius: 4px;
+}
+
+/* Error and Success Messages */
+.error-message {
+  color: #B51811;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  text-align: center;
+  font-weight: 600;
+}
+
+.success-message {
+  color: #2E7D32;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  text-align: center;
+  font-weight: 600;
+}
