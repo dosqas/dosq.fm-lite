@@ -1,7 +1,7 @@
 using System.Net.WebSockets;
 using System.Text;
 using backend.Data;
-using backend.Models;
+using backend.DTOs;
 using backend.Utils;
 using Microsoft.EntityFrameworkCore;
 
@@ -38,15 +38,34 @@ public class WebSocketManager(AppDbContext context)
     {
         try
         {
+            // Fetch songs and include their artists
             var songs = await _context.Songs.Include(s => s.Artist).ToListAsync();
-            var groupedData = SongUtils.GroupSongs(songs); 
 
+            // Map songs to DTOs
+            var songDtos = songs.Select(s => new SongDto
+            {
+                SongId = s.SongId,
+                Title = s.Title,
+                Album = s.Album,
+                DateListened = s.DateListened.ToString("o"), // Format as ISO 8601 string
+                Artist = new ArtistDto
+                {
+                    ArtistId = s.Artist.ArtistId,
+                    Name = s.Artist.Name
+                }
+            }).ToList();
+
+            // Group songs using DTOs
+            var groupedData = SongUtils.GroupSongs(songDtos);
+
+            // Create the WebSocket message
             var message = new
             {
                 type = "GROUPED_SONGS",
                 payload = groupedData
             };
 
+            // Send the message to the WebSocket client
             await SendMessageAsync(webSocket, message);
         }
         catch (Exception ex)
@@ -86,16 +105,41 @@ public class WebSocketManager(AppDbContext context)
             try
             {
                 // Generate a random song
-                var randomSong = SongUtils.GenerateRandomSong(); 
+                var randomSong = await SongUtils.GenerateRandomSongAsync(_context);
                 _context.Songs.Add(randomSong);
                 await _context.SaveChangesAsync();
 
-                // Fetch updated songs
+                // Map the random song to a DTO
+                var randomSongDto = new SongDto
+                {
+                    SongId = randomSong.SongId,
+                    Title = randomSong.Title,
+                    Album = randomSong.Album,
+                    DateListened = randomSong.DateListened.ToString("o"),
+                    Artist = new ArtistDto
+                    {
+                        ArtistId = randomSong.Artist.ArtistId,
+                        Name = randomSong.Artist.Name
+                    }
+                };
+
+                // Fetch updated songs and map them to DTOs
                 var songs = await _context.Songs.Include(s => s.Artist).ToListAsync();
-                var groupedData = SongUtils.GroupSongs(songs); 
+                var groupedData = SongUtils.GroupSongs(songs.Select(s => new SongDto
+                {
+                    SongId = s.SongId,
+                    Title = s.Title,
+                    Album = s.Album,
+                    DateListened = s.DateListened.ToString("o"),
+                    Artist = new ArtistDto
+                    {
+                        ArtistId = s.Artist.ArtistId,
+                        Name = s.Artist.Name
+                    }
+                }).ToList());
 
                 // Broadcast to all clients
-                var newSongMessage = new { type = "NEW_SONG", payload = randomSong };
+                var newSongMessage = new { type = "NEW_SONG", payload = randomSongDto };
                 var groupedDataMessage = new { type = "GROUPED_SONGS", payload = groupedData };
 
                 await BroadcastMessageAsync(newSongMessage);
