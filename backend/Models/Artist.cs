@@ -9,8 +9,5 @@ namespace backend.Models
 
         [Required]
         public required string Name { get; set; }
-
-        // 1-to-Many relationship with Song
-        public ICollection<Song>? Songs { get; set; }
     }
 }
