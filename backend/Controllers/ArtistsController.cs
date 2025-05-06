@@ -72,7 +72,8 @@ public class ArtistsController : ControllerBase
         [FromQuery] int limit = 15,
         [FromQuery] int page = 1,
         [FromQuery] int? minSongs = null,
-        [FromQuery] int? maxSongs = null)
+        [FromQuery] int? maxSongs = null,
+        [FromQuery] string? containsString = null)
     {
         try
         {
@@ -81,15 +82,26 @@ public class ArtistsController : ControllerBase
                 return BadRequest("Invalid limit or page parameter");
             }
 
-            // Fetch artists with pagination
-            var artists = await _context.Artists
-                .Select(a => new
+            // Get the authenticated user's ID
+            var userId = UserUtils.GetAuthenticatedUserId(User);
+
+            // Fetch artists based on the user's listened songs
+            var artists = await _context.Songs
+                .Where(s => s.UserId == userId) // Filter songs by the current user
+                .GroupBy(s => s.Artist) // Group by artist
+                .Select(g => new
                 {
-                    a.ArtistId,
-                    a.Name,
-                    SongCount = _context.Songs.Count(s => s.Artist.ArtistId == a.ArtistId) // Count songs for each artist
+                    ArtistId = g.Key.ArtistId,
+                    Name = g.Key.Name,
+                    SongCount = g.Count() // Count the number of songs listened to by the user for each artist
                 })
                 .ToListAsync();
+
+            // Apply filtering for containsString
+            if (!string.IsNullOrEmpty(containsString))
+            {
+                artists = artists.Where(a => a.Name.Contains(containsString, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
 
             // Apply filtering and sorting
             artists = ArtistUtils.FilterAndSortArtists(
@@ -108,7 +120,7 @@ public class ArtistsController : ControllerBase
 
             if (paginatedArtists == null || paginatedArtists.Count == 0)
             {
-                return Ok(new List<Artist>()); // Return an empty list with 200 OK
+                return Ok(new List<object>()); // Return an empty list with 200 OK
             }
 
             // Check if there are more artists to load
@@ -121,7 +133,7 @@ public class ArtistsController : ControllerBase
             Console.Error.WriteLine($"Error fetching limited artists: {ex.Message}");
             return StatusCode(500, "Internal Server Error");
         }
-        finally 
+        finally
         {
             // Log the action for auditing purposes
             var userId = UserUtils.GetAuthenticatedUserId(User);
