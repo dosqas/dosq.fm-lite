@@ -69,14 +69,8 @@ public static class SongUtils
             return "Album is required.";
         }
 
-        // Validate DateListened
-        if (song.DateListened == default)
-        {
-            return "DateListened is required.";
-        }
-
         // Ensure DateListened is not in the future
-        if (song.DateListened > DateTime.UtcNow)
+        if (song.DateListened > DateTime.UtcNow.AddHours(3))
         {
             return "DateListened cannot be in the future.";
         }
@@ -85,12 +79,6 @@ public static class SongUtils
         if (song.Artist.ArtistId <= 0)
         {
             return "ArtistId is required and must be greater than 0.";
-        }
-
-        // Validate ArtistName
-        if (string.IsNullOrWhiteSpace(song.Artist.Name))
-        {
-            return "ArtistName is required.";
         }
 
         // Validate UserId
