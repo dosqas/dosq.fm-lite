@@ -149,8 +149,11 @@ public class UserController : ControllerBase
                 return NotFound(new { error = "User not found" });
             }
 
-            // Return the username
-            return Ok(new { username = user.Username });
+            // Determine if the user is an admin
+            var isAdmin = user.Role == Models.User.UserRole.Admin;
+
+            // Return the username and admin status
+            return Ok(new { username = user.Username, isAdmin });
         }
         catch (Exception ex)
         {
@@ -160,74 +163,74 @@ public class UserController : ControllerBase
         }
     }
 
-    // /// <summary>
-    // /// Upload a profile video for the authenticated user.
-    // /// </summary>
-    // /// <param name="file">The uploaded video file.</param>
-    // /// <returns>A response indicating the upload status.</returns>
-    // [HttpPost("upload-profile-video")]
-    // public async Task<IActionResult> UploadProfileVideo([FromForm] IFormFile file)
-    // {
-    //     if (file == null || file.Length == 0)
-    //     {
-    //         return BadRequest(new { error = "No video uploaded" });
-    //     }
+    /// <summary>
+    /// Upload a profile video for the authenticated user.
+    /// </summary>
+    /// <param name="file">The uploaded video file.</param>
+    /// <returns>A response indicating the upload status.</returns>
+    [HttpPost("upload-profile-video")]
+    public async Task<IActionResult> UploadProfileVideo(IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+        {
+            return BadRequest(new { error = "No video uploaded" });
+        }
 
-    //     // Validate file type
-    //     var allowedTypes = new[] { "video/mp4", "video/mkv", "video/webm" };
-    //     if (!allowedTypes.Contains(file.ContentType))
-    //     {
-    //         return BadRequest(new { error = "Only video files are allowed" });
-    //     }
+        // Validate file type
+        var allowedTypes = new[] { "video/mp4", "video/mkv", "video/webm" };
+        if (!allowedTypes.Contains(file.ContentType))
+        {
+            return BadRequest(new { error = "Only video files are allowed" });
+        }
 
-    //     // Get the authenticated user's ID
-    //     var userId = UserUtils.GetAuthenticatedUserId(User);
-    //     if (userId == 0)
-    //     {
-    //         return Unauthorized(new { error = "User not authenticated" });
-    //     }
+        // Get the authenticated user's ID
+        var userId = UserUtils.GetAuthenticatedUserId(User);
+        if (userId == 0)
+        {
+            return Unauthorized(new { error = "User not authenticated" });
+        }
 
-    //     // Save the video file
-    //     var videoPath = Path.Combine(_videoDirectory, $"{userId}-profile-video.mp4");
-    //     using (var stream = new FileStream(videoPath, FileMode.Create))
-    //     {
-    //         await file.CopyToAsync(stream);
-    //     }
+        // Save the video file
+        var videoPath = Path.Combine(_videoDirectory, $"{userId}-profile-video.mp4");
+        using (var stream = new FileStream(videoPath, FileMode.Create))
+        {
+            await file.CopyToAsync(stream);
+        }
 
-    //     // Update the user's profile video path in the database
-    //     var user = await _context.Users.FindAsync(userId);
-    //     if (user == null)
-    //     {
-    //         return NotFound(new { error = "User not found" });
-    //     }
+        // Update the user's profile video path in the database
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null)
+        {
+            return NotFound(new { error = "User not found" });
+        }
 
-    //     user.ProfileVideoPath = $"/uploads/videos/{userId}-profile-video.mp4";
-    //     await _context.SaveChangesAsync();
+        user.ProfileVideoPath = $"/uploads/videos/{userId}-profile-video.mp4";
+        await _context.SaveChangesAsync();
 
-    //     return Ok(new { message = "Profile video uploaded successfully", videoPath = user.ProfileVideoPath });
-    // }
+        return Ok(new { message = "Profile video uploaded successfully", videoPath = user.ProfileVideoPath });
+    }
 
-    // /// <summary>
-    // /// Get the profile video for the authenticated user.
-    // /// </summary>
-    // /// <returns>The video file path or null if not found.</returns>
-    // [HttpGet("get-profile-video")]
-    // public async Task<IActionResult> GetProfileVideo()
-    // {
-    //     // Get the authenticated user's ID
-    //     var userId = UserUtils.GetAuthenticatedUserId(User);
-    //     if (userId == 0)
-    //     {
-    //         return Unauthorized(new { error = "User not authenticated" });
-    //     }
+    /// <summary>
+    /// Get the profile video for the authenticated user.
+    /// </summary>
+    /// <returns>The video file path or null if not found.</returns>
+    [HttpGet("get-profile-video")]
+    public async Task<IActionResult> GetProfileVideo()
+    {
+        // Get the authenticated user's ID
+        var userId = UserUtils.GetAuthenticatedUserId(User);
+        if (userId == 0)
+        {
+            return Unauthorized(new { error = "User not authenticated" });
+        }
 
-    //     // Get the user's profile video path from the database
-    //     var user = await _context.Users.FindAsync(userId);
-    //     if (user == null || string.IsNullOrEmpty(user.ProfileVideoPath))
-    //     {
-    //         return Ok(new { videoPath = (string?)null });
-    //     }
+        // Get the user's profile video path from the database
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null || string.IsNullOrEmpty(user.ProfileVideoPath))
+        {
+            return Ok(new { videoPath = (string?)null });
+        }
 
-    //     return Ok(new { videoPath = user.ProfileVideoPath });
-    // }
+        return Ok(new { videoPath = user.ProfileVideoPath });
+    }
 }
