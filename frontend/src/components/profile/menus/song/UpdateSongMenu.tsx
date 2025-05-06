@@ -6,6 +6,7 @@ interface UpdateSongMenuProps {
     title: string;
     album: string;
     dateListened: string; // ISO string for the date
+    timeListened: string;
     artistId: string; // Artist ID as a string
   };
   error: string | null;
