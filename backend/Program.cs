@@ -4,8 +4,10 @@ using Microsoft.IdentityModel.Tokens;
 using DotNetEnv;
 using System.Text;
 using backend.Data;
+using backend.Services;
+using Microsoft.Extensions.FileProviders;
 
-bool SEED_DATABASE = false; // Set to true to seed the database
+bool SEED_DATABASE = true; // Set to true to seed the database
 bool MONITORING_ENABLED = true; // Set to true to enable monitoring
 
 var builder = WebApplication.CreateBuilder(args);
@@ -124,9 +126,103 @@ void ConfigureMiddleware(WebApplication app)
     {
         if (context.Request.Path == "/ws/songs") // WebSocket route
         {
+            // Extract the token from the query parameters
+            var token = context.Request.Query["token"].ToString();
+            if (!string.IsNullOrEmpty(token))
+            {
+                try
+                {
+                    // Validate the token
+                    var tokenHandler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
+                    var jwtSecretKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY") 
+                            ?? throw new InvalidOperationException("JWT_SECRET_KEY is not set in the environment variables.");
+
+                    var validationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        ValidIssuer = "dosqfmlite-backend",
+                        ValidAudience = "dosqfmlite-frontend",
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecretKey))
+                    };
+
+                    var principal = tokenHandler.ValidateToken(token, validationParameters, out _);
+                    context.User = principal; // Populate HttpContext.User
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"WebSocket token validation failed: {ex.Message}");
+                    context.Response.StatusCode = 401; // Unauthorized
+                    return;
+                }
+            }
+            else
+            {
+                Console.Error.WriteLine("Token missing in WebSocket request.");
+                context.Response.StatusCode = 401; // Unauthorized
+                return;
+            }
+
+            // Handle the WebSocket request
             using var scope = app.Services.CreateScope();
             var webSocketManager = scope.ServiceProvider.GetRequiredService<backend.Services.WebSocketManager>();
             await webSocketManager.HandleWebSocketAsync(context);
+        }
+        else
+        {
+            await next();
+        }
+    });
+
+    app.Use(async (context, next) =>
+    {
+        if (context.Request.Path == "/ws/grouped") // New WebSocket route
+        {
+            // Extract the token from the query parameters
+            var token = context.Request.Query["token"].ToString();
+            if (!string.IsNullOrEmpty(token))
+            {
+                try
+                {
+                    // Validate the token
+                    var tokenHandler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
+                    var jwtSecretKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY") 
+                            ?? throw new InvalidOperationException("JWT_SECRET_KEY is not set in the environment variables.");
+
+                    var validationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        ValidIssuer = "dosqfmlite-backend",
+                        ValidAudience = "dosqfmlite-frontend",
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecretKey))
+                    };
+
+                    var principal = tokenHandler.ValidateToken(token, validationParameters, out _);
+                    context.User = principal; // Populate HttpContext.User
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"WebSocket token validation failed: {ex.Message}");
+                    context.Response.StatusCode = 401; // Unauthorized
+                    return;
+                }
+            }
+            else
+            {
+                Console.Error.WriteLine("Token missing in WebSocket request.");
+                context.Response.StatusCode = 401; // Unauthorized
+                return;
+            }
+
+            // Handle the WebSocket request
+            using var scope = app.Services.CreateScope();
+            var webSocketManager = scope.ServiceProvider.GetRequiredService<backend.Services.WebSocketManager>();
+            await webSocketManager.HandleGroupedSongsRequestAsync(context); // Updated method
         }
         else
         {
@@ -138,6 +234,12 @@ void ConfigureMiddleware(WebApplication app)
     {
         app.UseHttpsRedirection();
     }
+
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "uploads")),
+        RequestPath = "/uploads"
+    });
 
     app.UseAuthentication(); // Enable authentication middleware
     app.UseAuthorization();  // Enable authorization middleware
