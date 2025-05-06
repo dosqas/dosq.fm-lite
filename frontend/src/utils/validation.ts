@@ -17,6 +17,7 @@ export const validateForm = (formData: {
   }
 
   const now = new Date();
+  now.setHours(now.getHours() + 3)
   if (date > now) {
     return "Date cannot be in the future.";
   }
