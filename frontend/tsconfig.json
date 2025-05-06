@@ -53,6 +53,15 @@
       "@hooks/*": [
         "hooks/*"
       ],
+      "@content/*": [
+        "components/profile/content/*"
+      ],
+      "@lists/*": [
+        "components/profile/lists/*"
+      ],
+      "@cards/*": [
+        "components/profile/cards/*"
+      ],
     },
     "baseUrl": "./src" 
     ,
