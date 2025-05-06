@@ -4,6 +4,7 @@ using backend.Data;
 using backend.Models;
 using backend.Utils;
 using backend.DTOs;
+using Microsoft.AspNetCore.Authorization;
 
 namespace backend.Controllers;
 
@@ -18,6 +19,7 @@ public class SongsController(AppDbContext context, Services.WebSocketManager web
 
     // GET: /songs
     [HttpGet]
+    [Authorize] 
     public async Task<IActionResult> GetSongs(
         [FromQuery] string? from,
         [FromQuery] string? rangetype)
@@ -57,17 +59,26 @@ public class SongsController(AppDbContext context, Services.WebSocketManager web
         finally
         {
             // Log the action for auditing purposes
-            await _loggingService.LogAction(userId, LogEntry.ActionType.READ, LogEntry.EntityType.Song);
+            try
+            {
+                await _loggingService.LogAction(userId, LogEntry.ActionType.READ, LogEntry.EntityType.Song);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Error logging action: {ex.Message}");
+            }
         }
     }
 
     // GET: /songs/limited
     [HttpGet("limited")]
+    [Authorize]
     public async Task<IActionResult> GetLimitedSongs(
         [FromQuery] int limit = 15,
         [FromQuery] int page = 1,
         [FromQuery] string? from = null,
-        [FromQuery] string? rangetype = null)
+        [FromQuery] string? rangetype = null,
+        [FromQuery] string? containsString = null)
     {
         var userId = 0;
         try
@@ -81,8 +92,18 @@ public class SongsController(AppDbContext context, Services.WebSocketManager web
 
             // Fetch songs for the authenticated user with pagination
             var songsQuery = _context.Songs
-                .Where(s => s.UserId == userId)
-                .OrderByDescending(s => s.DateListened);
+                .Where(s => s.UserId == userId);
+
+            // Apply filtering for containsString
+            if (!string.IsNullOrEmpty(containsString))
+            {
+                songsQuery = songsQuery.Where(s =>
+                    s.Title.Contains(containsString) ||
+                    s.Album.Contains(containsString) ||
+                    s.Artist.Name.Contains(containsString));
+            }
+
+            songsQuery = songsQuery.OrderByDescending(s => s.DateListened);
 
             var total = await songsQuery.CountAsync();
             var paginatedSongs = await songsQuery
@@ -131,6 +152,7 @@ public class SongsController(AppDbContext context, Services.WebSocketManager web
 
     // GET: /songs/{id}
     [HttpGet("{id}")]
+    [Authorize]
     public async Task<IActionResult> GetSongById(int id)
     {
         var userId = 0;
@@ -163,7 +185,8 @@ public class SongsController(AppDbContext context, Services.WebSocketManager web
 
     // POST: /songs
     [HttpPost]
-    public async Task<IActionResult> AddSong([FromBody] Song newSong)
+    [Authorize]
+    public async Task<IActionResult> AddSong([FromBody] Song song)
     {
         var userId = 0;
         try
@@ -171,27 +194,49 @@ public class SongsController(AppDbContext context, Services.WebSocketManager web
             userId = UserUtils.GetAuthenticatedUserId(User);
 
             // Associate the song with the authenticated user
-            newSong.UserId = userId;
+            song.UserId = userId;
+
+            // Check if the artist already exists
+            if (song.Artist != null && song.Artist.ArtistId > 0)
+            {
+                var existingArtist = await _context.Artists
+                    .FirstOrDefaultAsync(a => a.ArtistId == song.Artist.ArtistId);
+
+                if (existingArtist != null)
+                {
+                    // Use the existing artist
+                    song.Artist = existingArtist;
+                }
+                else
+                {
+                    return BadRequest(new { error = "Artist not found." });
+                }
+            }
+            else
+            {
+                // If no artistId is provided, return an error
+                return BadRequest(new { error = "ArtistId is required and must reference an existing artist." });
+            }
 
             // Validate the incoming song data
-            var validationError = SongUtils.ValidateSong(newSong);
+            var validationError = SongUtils.ValidateSong(song);
             if (!string.IsNullOrEmpty(validationError))
             {
                 return BadRequest(new { error = validationError });
             }
 
             // Save the new song to the database
-            _context.Songs.Add(newSong);
+            _context.Songs.Add(song);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetSongById), new { id = newSong.SongId }, newSong);
+            return CreatedAtAction(nameof(GetSongById), new { id = song.SongId }, song);
         }
         catch (Exception ex)
         {
             Console.Error.WriteLine($"Error adding song: {ex.Message}");
             return StatusCode(500, "Internal Server Error");
         }
-        finally 
+        finally
         {
             // Log the action for auditing purposes
             await _loggingService.LogAction(userId, LogEntry.ActionType.CREATE, LogEntry.EntityType.Song);
@@ -200,12 +245,23 @@ public class SongsController(AppDbContext context, Services.WebSocketManager web
 
     // POST: /songs/start-auto-generation
     [HttpPost("start-auto-generation")]
+    [Authorize] // Ensure the endpoint is protected
     public async Task<IActionResult> StartAutoGeneration()
     {
         try
         {
-            await _webSocketManager.StartAutoGenerationAsync();
-            return Ok(new { message = "Auto-generation started" });
+            Console.WriteLine("StartAutoGeneration endpoint hit.");
+
+            // Get the authenticated user's ID
+            var userId = UserUtils.GetAuthenticatedUserId(User);
+            Console.WriteLine($"Authenticated user ID: {userId}");
+
+            // Start auto-generation for the authenticated user
+            Console.WriteLine($"Starting auto-generation for user {userId}...");
+            await _webSocketManager.StartAutoGenerationAsync(userId);
+
+            Console.WriteLine($"Auto-generation started successfully for user {userId}.");
+            return Ok(new { message = "Auto-generation started for user", userId });
         }
         catch (Exception ex)
         {
@@ -214,14 +270,24 @@ public class SongsController(AppDbContext context, Services.WebSocketManager web
         }
     }
 
-    // POST: /songs/stop-auto-generation
     [HttpPost("stop-auto-generation")]
+    [Authorize] // Ensure the endpoint is protected
     public IActionResult StopAutoGeneration()
     {
         try
         {
-            _webSocketManager.StopAutoGeneration();
-            return Ok(new { message = "Auto-generation stopped" });
+            Console.WriteLine("StopAutoGeneration endpoint hit.");
+
+            // Get the authenticated user's ID
+            var userId = UserUtils.GetAuthenticatedUserId(User);
+            Console.WriteLine($"Authenticated user ID: {userId}");
+
+            // Stop auto-generation for the authenticated user
+            Console.WriteLine($"Stopping auto-generation for user {userId}...");
+            _webSocketManager.StopAutoGeneration(userId);
+
+            Console.WriteLine($"Auto-generation stopped successfully for user {userId}.");
+            return Ok(new { message = "Auto-generation stopped for user", userId });
         }
         catch (Exception ex)
         {
@@ -232,6 +298,7 @@ public class SongsController(AppDbContext context, Services.WebSocketManager web
 
     // PATCH: Update a song by ID
     [HttpPatch("{id}")]
+    [Authorize] 
     public async Task<IActionResult> UpdateSong(int id, [FromBody] Song partialUpdate)
     {
         var userId = 0;
@@ -290,6 +357,7 @@ public class SongsController(AppDbContext context, Services.WebSocketManager web
 
     // DELETE: Delete a song by ID
     [HttpDelete("{id}")]
+    [Authorize] 
     public async Task<IActionResult> DeleteSong(int id)
     {
         var userId = 0;
