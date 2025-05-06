@@ -2,26 +2,23 @@ using backend.Data;
 using backend.Models;
 using Microsoft.EntityFrameworkCore;
 
-public class MonitoringService
-{
-    private readonly AppDbContext _context;
+namespace backend.Services;
 
-    public MonitoringService(AppDbContext context)
-    {
-        _context = context;
-    }
+public class MonitoringService(AppDbContext context)
+{
+    private readonly AppDbContext _context = context;
 
     public async Task MonitorUserActivity()
     {
         try
         {
-            var oneDayAgo = DateTime.UtcNow.AddDays(-1);
+            var oneHourAgo = DateTime.UtcNow.AddHours(-1);
 
-            // Fetch users with high activity in the last day
+            // Fetch users with high activity in the last hour
             var suspiciousUsers = await _context.LogEntries
-                .Where(le => le.Timestamp >= oneDayAgo)
+                .Where(le => le.Timestamp >= oneHourAgo)
                 .GroupBy(le => le.UserId)
-                .Where(g => g.Count() > 100) // Threshold: More than 100 actions in the last day
+                .Where(g => g.Count() > 5) // Threshold: More than 5 actions in the last hour
                 .Select(g => new { UserId = g.Key, ActionCount = g.Count() })
                 .ToListAsync();
 
@@ -35,15 +32,29 @@ public class MonitoringService
                 }
 
                 // Check if the user is already flagged
-                if (!_context.MonitoredUsers.Any(mu => mu.UserId == user.UserId))
+                var monitoredUser = await _context.MonitoredUsers
+                    .FirstOrDefaultAsync(mu => mu.UserId == user.UserId);
+
+                if (monitoredUser == null)
                 {
                     // Add the user to the MonitoredUsers table
                     _context.MonitoredUsers.Add(new MonitoredUser
                     {
                         UserId = user.UserId,
-                        Reason = $"High frequency of actions: {user.ActionCount} actions in the last day",
+                        Reason = $"High frequency of actions: {user.ActionCount} actions in the last hour",
                         FlaggedAt = DateTime.UtcNow
                     });
+                }
+                else
+                {
+                    // Update the existing entry only if the ActionCount has changed
+                    var newReason = $"High frequency of actions: {user.ActionCount} actions in the last hour";
+                    if (monitoredUser.Reason != newReason)
+                    {
+                        monitoredUser.Reason = newReason;
+                        monitoredUser.FlaggedAt = DateTime.UtcNow;
+                        _context.MonitoredUsers.Update(monitoredUser);
+                    }
                 }
             }
 
