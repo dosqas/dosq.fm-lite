@@ -1,19 +1,13 @@
-using Microsoft.Extensions.Hosting;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
+namespace backend.Services;
 
-public class MonitoringHostedService : BackgroundService
+public class MonitoringHostedService(IServiceProvider serviceProvider) : BackgroundService
 {
-    private readonly IServiceProvider _serviceProvider;
-
-    public MonitoringHostedService(IServiceProvider serviceProvider)
-    {
-        _serviceProvider = serviceProvider;
-    }
+    private readonly IServiceProvider _serviceProvider = serviceProvider;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        Console.WriteLine("MonitoringHostedService started.");
+
         while (!stoppingToken.IsCancellationRequested)
         {
             try
@@ -22,6 +16,7 @@ public class MonitoringHostedService : BackgroundService
                 var monitoringService = scope.ServiceProvider.GetRequiredService<MonitoringService>();
 
                 // Call the monitoring logic
+                Console.WriteLine("Executing MonitorUserActivity...");
                 await monitoringService.MonitorUserActivity();
             }
             catch (Exception ex)
@@ -29,8 +24,11 @@ public class MonitoringHostedService : BackgroundService
                 Console.Error.WriteLine($"Error in MonitoringHostedService: {ex.Message}");
             }
 
-            // Wait for 10 minutes before running again
-            await Task.Delay(TimeSpan.FromMinutes(10), stoppingToken);
+            // Wait before running again
+            Console.WriteLine("Waiting for 30 seconds...");
+            await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
         }
+
+        Console.WriteLine("MonitoringHostedService stopped.");
     }
 }
