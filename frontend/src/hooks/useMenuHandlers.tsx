@@ -14,7 +14,7 @@ export const useMenuHandlers = () => {
     dateListened: "",
     timeListened: "",
     artist: { artistId: 0, name: "" },
-    user: { userId: 0, username: "" },
+    userId: 0,
     };
 
   const [formData, setFormData] = useState<Song>(defaultFormData);
@@ -43,10 +43,20 @@ export const useMenuHandlers = () => {
 
   const handleOpenUpdateMenu = (song: Song) => {
     setSelectedSong(song);
+    setFormData({
+      songId: song.songId,
+      title: song.title,
+      album: song.album,
+      dateListened: song.dateListened.split("T")[0],
+      timeListened: song.dateListened.split("T")[1]?.slice(0, 5) || "",
+      artist: { artistId: song.artist.artistId, name: song.artist.name },
+      userId: song.userId,
+    });
     setError(null);
     setSuccessMessage(null);
     setIsUpdateMenuOpen(true);
   };
+  
 
   const handleCloseUpdateMenu = () => {
     setSelectedSong(null);
