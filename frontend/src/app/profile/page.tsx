@@ -1,16 +1,18 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import ProfileHeader from "@components/profile/ProfileHeader";
-import ProfileOverviewContent from "@components/profile/ProfileContent";
+import UserHeader from "@components/profile/UserHeader";
+import UserContent from "@content/UserContent";
+import AdminContent from "@content/AdminContent";
 import "@styles/profile/profile.css";
 import { useRouter } from "next/navigation";
 import { isLoggedIn, clearToken } from "@utils/authUtils";
 import { ConnectionStatusProvider } from "@context/ConnectionStatusContext";
 
 const ProfilePage: React.FC = () => {
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true); // Loading state
   const [username, setUsername] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null); // Admin status (null initially)
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const SERVER_IP = process.env.NEXT_PUBLIC_SERVER_IP;
@@ -38,7 +40,7 @@ const ProfilePage: React.FC = () => {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
         });
 
@@ -54,12 +56,15 @@ const ProfilePage: React.FC = () => {
         }
 
         const data = await response.json();
+        console.log("Response data:", data); // Log the entire response
         setUsername(data.username);
+        setIsAdmin(data.isAdmin); // Update the admin status
+        console.log("User is admin:", data.isAdmin); // Log the admin status
       } catch (err: any) {
         console.error("Error fetching user data:", err);
         setError(err.message || "An error occurred");
       } finally {
-        setIsLoading(false);
+        setIsLoading(false); // Mark loading as complete
       }
     };
 
@@ -74,7 +79,7 @@ const ProfilePage: React.FC = () => {
   };
 
   // Show a loading state while checking authentication
-  if (isLoading) {
+  if (isLoading || isAdmin === null) {
     return <div className="profile-loading">Loading your profile...</div>;
   }
 
@@ -101,8 +106,8 @@ const ProfilePage: React.FC = () => {
             Logout
           </button>
         </div>
-        <ProfileHeader username={username} error={error} />
-        <ProfileOverviewContent />
+        <UserHeader username={username} error={error} />
+        {isAdmin ? <AdminContent /> : <UserContent />} {/* Conditionally render content */}
       </div>
     </ConnectionStatusProvider>
   );
