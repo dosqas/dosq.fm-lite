@@ -14,16 +14,17 @@ export const connectWebSocket = (
 
   const connect = () => {
     onConnectionStatusChange(retryCount > 0 ? "retrying..." : "connecting");
-
+  
     try {
-      ws = new WebSocket(`ws://${SERVER_IP}/ws/songs`);
-
+      const token = localStorage.getItem("token"); // Retrieve the token from localStorage
+      ws = new WebSocket(`ws://${SERVER_IP}/ws/songs?token=${token}`);
+  
       ws.onopen = () => {
         console.log("WebSocket connected successfully");
         onConnectionStatusChange("connected");
         retryCount = 0;
       };
-
+  
       ws.onmessage = (event) => {
         try {
           const message = JSON.parse(event.data);
@@ -32,14 +33,14 @@ export const connectWebSocket = (
           console.error("Failed to process WebSocket message:", error);
         }
       };
-
+  
       ws.onclose = (event) => {
         console.log("WebSocket closed:", {
           code: event.code,
           reason: event.reason,
           wasClean: event.wasClean,
         });
-
+  
         if (!event.wasClean) {
           scheduleReconnect();
         }
@@ -89,8 +90,14 @@ export const toggleAutoGeneration = async (isAutoGenerating: boolean): Promise<v
     ? `http://${SERVER_IP}/api/songs/stop-auto-generation`
     : `http://${SERVER_IP}/api/songs/start-auto-generation`;
 
+  const token = localStorage.getItem("token"); // Retrieve the token from localStorage
+
   const response = await fetch(endpoint, {
     method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`, // Add the Bearer token to the Authorization header
+      "Content-Type": "application/json", // Optional: Add Content-Type header
+    },
   });
 
   if (!response.ok) {
@@ -113,7 +120,8 @@ export const fetchSongsLimited = async (
   itemsPerPage: number,
   selectedYear?: string | null,
   selectedMonth?: string | null,
-  selectedDay?: string | null
+  selectedDay?: string | null,
+  containsString?: string | null
 ): Promise<{ songs: Song[]; hasMore: boolean }> => {
   const queryParams = new URLSearchParams();
   queryParams.append("page", page.toString());
@@ -136,6 +144,10 @@ export const fetchSongsLimited = async (
     queryParams.append("rangetype", "day");
   }
 
+  if (containsString) {
+    queryParams.append("containsString", containsString);
+  }
+
   const token = localStorage.getItem("token"); // Example: Retrieve token from localStorage
 
   const response = await fetch(`http://${SERVER_IP}/api/songs/limited?${queryParams.toString()}`, {
@@ -155,10 +167,14 @@ export const fetchSongsLimited = async (
 
 // Function to handle adding a song to the backend
 export const addSongOnline = async (formattedSong: Song): Promise<Song> => {
+  const token = localStorage.getItem("token"); // Retrieve the token from localStorage
   const response = await fetch(`http://${SERVER_IP}/api/songs`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(formattedSong),
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`, // Add the Bearer token to the Authorization header
+    },
+    body: JSON.stringify(formattedSong), // Send the song data in the request body
   });
 
   if (!response.ok) {
@@ -169,14 +185,31 @@ export const addSongOnline = async (formattedSong: Song): Promise<Song> => {
   return await response.json();
 };
 
+// Function to handle updating a song on the backend
 export const updateSongOnline = async (
   id: number | string,
-  formattedSong: Partial<Song>
+  formattedSong: Partial<Song> & { dateListened: string; timeListened?: string; artistId: number; artist: any }
 ): Promise<Song> => {
+  const token = localStorage.getItem("token"); // Retrieve the token from localStorage
+
+  // Merge dateListened and timeListened into a single ISO 8601 string
+  const combinedDateTime = `${formattedSong.dateListened}T${formattedSong.timeListened || "00:00"}:00Z`;
+
+  // Prepare the payload with the merged date and both artistId and artist
+  const payload = {
+    ...formattedSong,
+    dateListened: combinedDateTime, // Replace with the combined ISO string
+    artistId: formattedSong.artistId, // Include artistId
+    artist: formattedSong.artist, // Include artist object
+  };
+
   const response = await fetch(`http://${SERVER_IP}/api/songs/${id}`, {
     method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(formattedSong),
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`, // Add the Bearer token to the Authorization header
+    },
+    body: JSON.stringify(payload), // Send the updated song data in the request body
   });
 
   if (!response.ok) {
@@ -187,9 +220,16 @@ export const updateSongOnline = async (
   return await response.json();
 };
 
+// Function to handle deleting a song from the backend
 export const deleteSongOnline = async (id: string | number): Promise<void> => {
+  const token = localStorage.getItem("token"); // Retrieve the token from localStorage
   const response = await fetch(`http://${SERVER_IP}/api/songs/${id}`, {
     method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`, // Add the Bearer token to the Authorization header
+    },
+    body: JSON.stringify({ id }), // Optionally include the ID in the body
   });
 
   if (!response.ok) {
