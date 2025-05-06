@@ -12,7 +12,7 @@ const openSans = Open_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "dosq.fm",
+  title: "dosq.fm-lite",
   description: "A web music tracker complete with stats & analytics.",
 };
 
