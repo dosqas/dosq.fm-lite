@@ -1,6 +1,6 @@
 import React, { useState, forwardRef, useImperativeHandle, useRef, useEffect } from "react";
 import { Song } from "@entities/song";
-import SongCard from "../SongCard";
+import SongCard from "../cards/SongCard";
 import UpdateSongMenu from "@menus/song/UpdateSongMenu";
 import AddSongMenu from "@menus/song/AddSongMenu";
 import { assignHrColor } from "@utils/songCardUtils";
@@ -44,6 +44,8 @@ const SongList = forwardRef<SongListHandle, SongListProps>(
 
     const { isOnline, isServerReachable } = useConnectionStatus();
     const [connectionStatus, setConnectionStatus] = useState("connecting");
+
+    const [containsString, setContainsString] = useState<string | null>(null); // State for the search string
 
     const {
       isAddMenuOpen,
@@ -103,7 +105,8 @@ const SongList = forwardRef<SongListHandle, SongListProps>(
           itemsPerPage,
           selectedYear,
           selectedMonth,
-          selectedDay
+          selectedDay,
+          containsString
         );
     
         console.log("Fetched songs:", newSongs);
@@ -125,12 +128,12 @@ const SongList = forwardRef<SongListHandle, SongListProps>(
     };
 
     useEffect(() => {
-      console.log("Selected filters changed:", { selectedYear, selectedMonth, selectedDay });
+      console.log("Selected filters changed:", { selectedYear, selectedMonth, selectedDay, containsString });
       setSongs([]); // Reset songs when filters change
       setCurrentPage(1);
       setHasMore(true);
       fetchSongs(1);
-    }, [selectedYear, selectedMonth, selectedDay]);
+    }, [selectedYear, selectedMonth, selectedDay, containsString]);
 
     const handleScroll = () => {
       if (!containerRef.current || isLoading || !hasMore) return;
@@ -164,15 +167,28 @@ const SongList = forwardRef<SongListHandle, SongListProps>(
     useEffect(() => {
       const cleanup = connectWebSocketService(
         (message) => {
-          if (message.type === "NEW_SONG") {
-            const newSong = message.payload;
-
+          if (message.type === "AUTO_GENERATION_STATUS") {
+            setIsAutoGenerating(message.payload.isActive);   
+          } 
+          else if (message.type === "NEW_SONG") {
+            // Normalize the payload to match SongCardProps
+            const newSong = {
+              songId: message.payload.SongId,
+              title: message.payload.Title,
+              album: message.payload.Album,
+              dateListened: message.payload.DateListened, // Already in ISO format
+              artist: {
+                name: message.payload.Artist.Name, // Extract artist name
+              }
+            };
+    
+            // Add the normalized song to the state
             setSongs((prevSongs) => [newSong, ...prevSongs]);
           }
         },
         (status) => setConnectionStatus(status)
       );
-
+    
       return cleanup; // Cleanup WebSocket on component unmount
     }, []);
 
@@ -222,15 +238,21 @@ const SongList = forwardRef<SongListHandle, SongListProps>(
       // Combine dateListened and timeListened into a single ISO 8601 string
       const combinedDateTime = `${formData.dateListened}T${formData.timeListened || "00:00"}:00Z`;
     
+      const artist = songs.find((song) => song.artist.artistId === formData.artist?.artistId);
+
       const updatedFormData = {
         songId: formData.songId,
         title: formData.title,
         album: formData.album,
-        dateListened: combinedDateTime, 
-        artist: formData.artist,
-        user: formData.user,
+        dateListened: combinedDateTime,
+        artist: {
+          artistId: formData.artist?.artistId || 0, // Include artistId, default to 0 if undefined
+          name: artist?.artist.name || "", // Get the artist's name or fallback to an empty string
+        },
+        artistId: formData.artist?.artistId || 0, // Include artistId, default to 0 if undefined
+        userId: formData.userId,
       };
-    
+
       const validationResult = validateForm(updatedFormData);
     
       if (validationResult) {
@@ -352,7 +374,15 @@ const SongList = forwardRef<SongListHandle, SongListProps>(
         }
     
         // Handle online mode
-        const updatedSongData = await updateSongOnlineService(id, updatedSong);
+        const updatedSongWithArtistId = {
+          ...updatedSong,
+          artistId: updatedSong.artist?.artistId || 0, // Ensure artistId is included
+          dateListened: updatedSong.dateListened || "", // Ensure dateListened is always a string
+          artist: updatedSong.artist || { name: "" }, // Ensure artist is always included
+          userId: 0, // Ensure userId is included
+        };
+
+        const updatedSongData = await updateSongOnlineService(id, updatedSongWithArtistId);
     
         // Reflect changes in the frontend
         setSongs((prevSongs) => {
@@ -463,6 +493,20 @@ const SongList = forwardRef<SongListHandle, SongListProps>(
             {isAutoGenerating ? "Stop Auto-Generation" : "Start Auto-Generation"}
           </button>
         </div>
+
+        <input
+    type="text"
+    placeholder="Search songs..."
+    value={containsString || ""}
+    onChange={(e) => setContainsString(e.target.value)}
+    className="search-input"
+    style={{
+      marginLeft: "10px",
+      padding: "5px",
+      borderRadius: "4px",
+      border: "1px solid #ccc",
+    }}
+  />
     
         <div
           className="profile-songs-col-list"
@@ -479,9 +523,9 @@ const SongList = forwardRef<SongListHandle, SongListProps>(
     
             return (
               <SongCard
-                key={song.songId}
+                key={`${song.songId}-${index}`} // Ensure uniqueness by appending the index
                 title={song.title}
-                artist={song.artist.name || ""} // Use artist's name or fallback to an empty string
+                artist={song.artist?.name || "test"} // Use artist's name or fallback to an empty string
                 album={song.album}
                 dateListened={new Date(song.dateListened).toLocaleString()} // Format ISO date
                 onUpdate={() => handleOpenUpdateMenu(song)}
@@ -529,47 +573,50 @@ const SongList = forwardRef<SongListHandle, SongListProps>(
               setFormData({ ...formData, [name]: value });
             }
           }}
-          artists={songs
-            .filter((song) => song.artist.artistId !== undefined && song.artist.name !== undefined)
-            .map((song) => ({
-              id: song.artist.artistId as number,
-              name: song.artist.name as string,
-            }))} // Generate the list of artists from the songs
+          artists={Array.from(
+              new Map(
+                songs
+                  .filter((song) => song.artist.artistId !== undefined && song.artist.name !== undefined)
+                  .map((song) => [song.artist.artistId!, { id: song.artist.artistId!, name: song.artist.name! }])
+              ).values()
+            )}
         />
         )}
     
         {isUpdateMenuOpen && selectedSong && (
           <UpdateSongMenu
             formData={{
-              title: selectedSong.title,
-              album: selectedSong.album,
-              dateListened: selectedSong.dateListened,
-              artistId: (selectedSong.artist.artistId ?? "").toString(), // Convert artistId to string or fallback to an empty string
+              ...formData,
+              timeListened: formData.timeListened || "", // Ensure timeListened is always a string
+              artistId: formData.artist?.artistId?.toString() || "", // Ensure artistId is included as a string
             }}
             error={error}
             successMessage={successMessage}
             onClose={handleCloseUpdateMenu}
             onSubmit={(e) => {
-              e.preventDefault();
               handleUpdateSong(selectedSong.songId, formData);
             }}
             onInputChange={(e) => {
               const { name, value } = e.target;
               if (name === "artistId") {
-                setFormData({
-                  ...formData,
-                  artist: { ...formData.artist, artistId: parseInt(value, 10) }, // Update artistId in the nested artist object
-                });
+                setFormData((prevFormData) => ({
+                  ...prevFormData,
+                  artist: { ...prevFormData.artist, artistId: parseInt(value, 10) },
+                }));
               } else {
-                setFormData({ ...formData, [name]: value });
+                setFormData((prevFormData) => ({
+                  ...prevFormData,
+                  [name]: value,
+                }));
               }
             }}
-            artists={songs
-              .filter((song) => song.artist.artistId !== undefined && song.artist.name !== undefined)
-              .map((song) => ({
-                id: song.artist.artistId as number,
-                name: song.artist.name as string,
-              }))} // Generate the list of artists from the songs
+            artists={Array.from(
+              new Map(
+                songs
+                  .filter((song) => song.artist.artistId !== undefined && song.artist.name !== undefined)
+                  .map((song) => [song.artist.artistId!, { id: song.artist.artistId!, name: song.artist.name! }])
+              ).values()
+            )}
           />
         )}
       </div>
