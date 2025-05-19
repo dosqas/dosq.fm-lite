@@ -215,7 +215,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
       const token = localStorage.getItem("token");
   
       try {
-        const response = await fetch(`http://${SERVER_IP}/api/user/upload-profile-video`, {
+        const response = await fetch(`https://${SERVER_IP}/api/user/upload-profile-video`, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -246,7 +246,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
   const handleDownloadVideo = () => {
     if (uploadedVideoUrl) {
       const link = document.createElement("a");
-      link.href = `http://${SERVER_IP}${uploadedVideoUrl}`;
+      link.href = `https://${SERVER_IP}${uploadedVideoUrl}`;
       link.download = "favorite-concert-video.mp4";
       link.click();
     }
@@ -329,7 +329,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
         {uploadedVideoUrl && (
           <div className="uploaded-video">
             <video controls width="100%">
-              <source src={`http://${SERVER_IP}${uploadedVideoUrl}`} type="video/mp4" />
+              <source src={`https://${SERVER_IP}${uploadedVideoUrl}`} type="video/mp4" />
               Your browser does not support the video tag.
             </video>
           </div>

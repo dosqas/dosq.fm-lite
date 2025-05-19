@@ -36,7 +36,7 @@ const ProfilePage: React.FC = () => {
           throw new Error("No authentication token found");
         }
 
-        const response = await fetch(`http://${SERVER_IP}/api/User/get-username`, {
+        const response = await fetch(`https://${SERVER_IP}/api/User/get-username`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",

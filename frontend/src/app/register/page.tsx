@@ -25,7 +25,7 @@ const RegisterPage: React.FC = () => {
       };
   
       // Send the request with the payload in the body
-      const response = await fetch(`http://${SERVER_IP}/api/User/register`, {
+      const response = await fetch(`https://${SERVER_IP}/api/User/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

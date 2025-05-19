@@ -87,8 +87,8 @@ export const connectWebSocket = (
 
 export const toggleAutoGeneration = async (isAutoGenerating: boolean): Promise<void> => {
   const endpoint = isAutoGenerating
-    ? `http://${SERVER_IP}/api/songs/stop-auto-generation`
-    : `http://${SERVER_IP}/api/songs/start-auto-generation`;
+    ? `https://${SERVER_IP}/api/songs/stop-auto-generation`
+    : `https://${SERVER_IP}/api/songs/start-auto-generation`;
 
   const token = localStorage.getItem("token"); // Retrieve the token from localStorage
 
@@ -150,7 +150,7 @@ export const fetchSongsLimited = async (
 
   const token = localStorage.getItem("token"); // Example: Retrieve token from localStorage
 
-  const response = await fetch(`http://${SERVER_IP}/api/songs/limited?${queryParams.toString()}`, {
+  const response = await fetch(`https://${SERVER_IP}/api/songs/limited?${queryParams.toString()}`, {
     headers: {
       "Authorization": `Bearer ${token}`, // Include the Bearer token
       "Content-Type": "application/json",
@@ -168,7 +168,7 @@ export const fetchSongsLimited = async (
 // Function to handle adding a song to the backend
 export const addSongOnline = async (formattedSong: Song): Promise<Song> => {
   const token = localStorage.getItem("token"); // Retrieve the token from localStorage
-  const response = await fetch(`http://${SERVER_IP}/api/songs`, {
+  const response = await fetch(`https://${SERVER_IP}/api/songs`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -203,7 +203,7 @@ export const updateSongOnline = async (
     artist: formattedSong.artist, // Include artist object
   };
 
-  const response = await fetch(`http://${SERVER_IP}/api/songs/${id}`, {
+  const response = await fetch(`https://${SERVER_IP}/api/songs/${id}`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
@@ -223,7 +223,7 @@ export const updateSongOnline = async (
 // Function to handle deleting a song from the backend
 export const deleteSongOnline = async (id: string | number): Promise<void> => {
   const token = localStorage.getItem("token"); // Retrieve the token from localStorage
-  const response = await fetch(`http://${SERVER_IP}/api/songs/${id}`, {
+  const response = await fetch(`https://${SERVER_IP}/api/songs/${id}`, {
     method: "DELETE",
     headers: {
       "Content-Type": "application/json",

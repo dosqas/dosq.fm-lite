@@ -2,7 +2,7 @@ export const fetchUploadedVideo = async (serverIp: string): Promise<{ videoPath:
     const token = localStorage.getItem("token");
   
     try {
-      const response = await fetch(`http://${serverIp}/api/user/get-profile-video`, {
+      const response = await fetch(`https://${serverIp}/api/user/get-profile-video`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,

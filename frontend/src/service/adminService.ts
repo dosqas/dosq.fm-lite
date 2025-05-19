@@ -16,7 +16,7 @@ export interface LogEntry {
 
 export const fetchMonitoredUsers = async (token: string): Promise<MonitoredUser[]> => {
   try {
-    const response = await fetch(`http://${SERVER_IP}/api/admin/monitored-users`, {
+    const response = await fetch(`https://${SERVER_IP}/api/admin/monitored-users`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`, // Add the token to the Authorization header
@@ -37,7 +37,7 @@ export const fetchMonitoredUsers = async (token: string): Promise<MonitoredUser[
 
 export const fetchUserLogs = async (userId: number, token: string): Promise<LogEntry[]> => {
   try {
-    const response = await fetch(`http://${SERVER_IP}/api/admin/user-logs/${userId}`, {
+    const response = await fetch(`https://${SERVER_IP}/api/admin/user-logs/${userId}`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`, // Add the token to the Authorization header

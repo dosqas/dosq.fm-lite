@@ -99,7 +99,7 @@ export const fetchArtistsLimited = async (
 
   const token = localStorage.getItem("token");
 
-  const response = await fetch(`http://${SERVER_IP}/api/artists/limited?${queryParams.toString()}`, {
+  const response = await fetch(`https://${SERVER_IP}/api/artists/limited?${queryParams.toString()}`, {
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
@@ -117,7 +117,7 @@ export const fetchArtistsLimited = async (
 // Add an artist online
 export const addArtistOnline = async (formattedArtist: Artist): Promise<Artist> => {
   const token = localStorage.getItem("token");
-  const response = await fetch(`http://${SERVER_IP}/api/artists`, {
+  const response = await fetch(`https://${SERVER_IP}/api/artists`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -140,7 +140,7 @@ export const updateArtistOnline = async (
 ): Promise<Artist> => {
   const token = localStorage.getItem("token");
 
-  const response = await fetch(`http://${SERVER_IP}/api/artists/${id}`, {
+  const response = await fetch(`https://${SERVER_IP}/api/artists/${id}`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
@@ -159,7 +159,7 @@ export const updateArtistOnline = async (
 // Delete an artist online
 export const deleteArtistOnline = async (id: string | number): Promise<void> => {
   const token = localStorage.getItem("token");
-  const response = await fetch(`http://${SERVER_IP}/api/artists/${id}`, {
+  const response = await fetch(`https://${SERVER_IP}/api/artists/${id}`, {
     method: "DELETE",
     headers: {
       "Content-Type": "application/json",
