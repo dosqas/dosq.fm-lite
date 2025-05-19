@@ -8,7 +8,7 @@ using backend.Services;
 using Microsoft.Extensions.FileProviders;
 using Npgsql;
 
-bool SEED_DATABASE = false; // Set to true to seed the database
+bool SEED_DATABASE = true; // Set to true to seed the database
 bool MONITORING_ENABLED = true; // Set to true to enable monitoring
 
 var builder = WebApplication.CreateBuilder(args);
