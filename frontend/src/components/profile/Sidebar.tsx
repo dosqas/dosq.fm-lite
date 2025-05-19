@@ -16,6 +16,7 @@ import {
   Legend,
 } from "chart.js";
 import { fetchUploadedVideo } from "@service/userService";
+import { SERVER_IP } from "@config/config";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
@@ -52,7 +53,6 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   
   const { isOnline, isServerReachable } = useConnectionStatus();
-  const SERVER_IP = process.env.NEXT_PUBLIC_SERVER_IP;
 
   // Fetch the video tied to the profile on component load
   const loadUploadedVideo = async () => {

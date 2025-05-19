@@ -8,6 +8,7 @@ import "@styles/profile/profile.css";
 import { useRouter } from "next/navigation";
 import { isLoggedIn, clearToken } from "@utils/authUtils";
 import { ConnectionStatusProvider } from "@context/ConnectionStatusContext";
+import { SERVER_IP } from "@config/config";
 
 const ProfilePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true); // Loading state
@@ -15,7 +16,6 @@ const ProfilePage: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null); // Admin status (null initially)
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  const SERVER_IP = process.env.NEXT_PUBLIC_SERVER_IP;
 
   // Check authentication and fetch user data
   useEffect(() => {

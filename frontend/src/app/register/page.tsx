@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { redirect } from "next/navigation"; // Import redirect for navigation
 import "@styles/auth/authpage.css"; // Reuse the same CSS styles
+import { SERVER_IP } from "@config/config";
 
 const RegisterPage: React.FC = () => {
   const [username, setUsername] = useState("");
@@ -10,7 +11,6 @@ const RegisterPage: React.FC = () => {
   const [role, setRole] = useState("0"); // Default to "user" role
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const SERVER_IP = process.env.NEXT_PUBLIC_SERVER_IP;
 
   const handleRegister = async () => {
     try {

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import "@styles/auth/authpage.css";
 import { isLoggedIn, setToken } from "@utils/authUtils";
+import { SERVER_IP } from "@config/config";
 
 const LoginPage: React.FC = () => {
   const [username, setUsername] = useState("");
@@ -12,7 +13,6 @@ const LoginPage: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [checkingAuth, setCheckingAuth] = useState(true);
   const router = useRouter();
-  const SERVER_IP = process.env.NEXT_PUBLIC_SERVER_IP;
 
   // Check if already logged in and redirect if needed
   useEffect(() => {

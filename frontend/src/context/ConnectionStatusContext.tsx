@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useState, useEffect, useContext } from "react";
+import { SERVER_IP } from "@config/config";
 
 interface ConnectionStatusContextProps {
   isOnline: boolean;
@@ -18,8 +19,6 @@ export const ConnectionStatusProvider: React.FC<{ children: React.ReactNode }> =
   const [isOnline, setIsOnline] = useState(true);
   const [isServerReachable, setIsServerReachable] = useState(true);
   const [statusMessage, setStatusMessage] = useState("");
-
-  const SERVER_IP = process.env.NEXT_PUBLIC_SERVER_IP;
 
   const checkServerStatus = async () => {
     if (checkServerStatus.isRunning) {

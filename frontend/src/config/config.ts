@@ -1,1 +1,1 @@
-export const SERVER_IP = process.env.NEXT_PUBLIC_SERVER_IP;
+export const SERVER_IP = process.env.NEXT_PUBLIC_SERVER_URL;
