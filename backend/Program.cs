@@ -6,6 +6,7 @@ using System.Text;
 using backend.Data;
 using backend.Services;
 using Microsoft.Extensions.FileProviders;
+using Npgsql;
 
 bool SEED_DATABASE = false; // Set to true to seed the database
 bool MONITORING_ENABLED = true; // Set to true to enable monitoring
@@ -56,17 +57,26 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
     services.AddEndpointsApiExplorer();
     services.AddSwaggerGen();
 
-    // Add DbContext
-    var host = Environment.GetEnvironmentVariable("POSTGRES_HOST");
-    var port = Environment.GetEnvironmentVariable("POSTGRES_PORT");
-    var user = Environment.GetEnvironmentVariable("POSTGRES_USER");
-    var password = Environment.GetEnvironmentVariable("POSTGRES_PASSWORD");
-    var db = Environment.GetEnvironmentVariable("POSTGRES_DB");
-
+    // Configure DATABASE_URL or fallback to DefaultConnection
+    string? rawUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
     string connectionString;
-    if (!string.IsNullOrEmpty(host) && !string.IsNullOrEmpty(port) && !string.IsNullOrEmpty(user) && !string.IsNullOrEmpty(password) && !string.IsNullOrEmpty(db))
+
+    if (!string.IsNullOrWhiteSpace(rawUrl))
     {
-        connectionString = $"Host={host};Port={port};Database={db};Username={user};Password={password}";
+        var databaseUri = new Uri(rawUrl);
+        var userInfo = databaseUri.UserInfo.Split(':');
+
+        var builder = new Npgsql.NpgsqlConnectionStringBuilder
+        {
+            Host = databaseUri.Host,
+            Port = databaseUri.Port,
+            Username = userInfo[0],
+            Password = userInfo[1],
+            Database = databaseUri.AbsolutePath.Trim('/'),
+            SslMode = SslMode.Require,
+        };
+
+        connectionString = builder.ConnectionString;
     }
     else
     {
@@ -76,44 +86,40 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
     services.AddDbContext<AppDbContext>(options =>
         options.UseNpgsql(connectionString));
 
-    // Register WebSocketManager as a scoped service
+    // Register scoped and hosted services
     services.AddScoped<backend.Services.WebSocketManager>();
-
-    // Register Logging and Monitoring services
-    builder.Services.AddScoped<LoggingService>();
-    builder.Services.AddScoped<MonitoringService>();
-
-    // Register the MonitoringHostedService as a hosted service
-    builder.Services.AddHostedService<MonitoringHostedService>();
+    services.AddScoped<LoggingService>();
+    services.AddScoped<MonitoringService>();
+    services.AddHostedService<MonitoringHostedService>();
 
     // Add controllers
     services.AddControllers();
 
-    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
+    // JWT Authentication
+    services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(options =>
         {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = "dosqfmlite-backend",
-            ValidAudience = "dosqfmlite-frontend",
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
-        };
-    });
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = "dosqfmlite-backend",
+                ValidAudience = "dosqfmlite-frontend",
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+            };
+        });
 
-    // Add CORS policy
+    // CORS
+    var frontendUrl = Environment.GetEnvironmentVariable("FRONTEND_URL") ?? "http://localhost:3000";
     services.AddCors(options =>
     {
         options.AddDefaultPolicy(policy =>
         {
-                policy.WithOrigins(
-                    "http://localhost:3000",           // for local dev
-                    Environment.GetEnvironmentVariable("FRONTEND_URL")!) // for production
-                  .AllowAnyMethod() // Allow any HTTP method (GET, POST, etc.)
-                  .AllowAnyHeader() // Allow any headers
+            policy.WithOrigins("http://localhost:3000", frontendUrl)
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
                   .AllowCredentials();
         });
     });
