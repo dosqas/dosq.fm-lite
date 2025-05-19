@@ -113,16 +113,22 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
 
     // CORS
     var frontendUrl = Environment.GetEnvironmentVariable("FRONTEND_URL") ?? "http://localhost:3000";
+    if (!frontendUrl.StartsWith("http"))
+    {
+        frontendUrl = "https://" + frontendUrl;
+    }
+
     services.AddCors(options =>
     {
         options.AddDefaultPolicy(policy =>
         {
             policy.WithOrigins("http://localhost:3000", frontendUrl)
-                  .AllowAnyMethod()
-                  .AllowAnyHeader()
-                  .AllowCredentials();
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials();
         });
     });
+
 }
 
 /// <summary>
