@@ -3,6 +3,10 @@ const path = require('path');
 const nextConfig = {
   reactStrictMode: false,
 
+  env: {
+    NEXT_PUBLIC_SERVER_URL: 'dosqfm-lite-production.up.railway.app',
+  },
+
   webpack: (config) => {
     const rootPath = process.cwd();
 
