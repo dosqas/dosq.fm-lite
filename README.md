@@ -1,4 +1,4 @@
-# dosq.fm (lite version) – A Song Listening History Tracker
+# 🎶 dosq.fm (lite version) – A Song Listening History Tracker
 
 **Last.fm-inspired song listening history tracker with statistics & insights**  
 
